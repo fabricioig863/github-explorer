@@ -1,0 +1,2010 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>App GitHub API · Recriação moderna</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.5.0/dist/tabler-icons.min.css" rel="stylesheet">
+<template id="__bundler_thumbnail" data-bg-color="#1a1a20">
+  <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+    <rect x="380" y="180" width="440" height="440" rx="80" fill="#fbfaf7"/>
+    <circle cx="600" cy="400" r="90" fill="oklch(0.55 0.18 275)"/>
+    <text x="600" y="700" text-anchor="middle" font-family="ui-sans-serif" font-size="64" font-weight="600" fill="#fbfaf7">Octolens</text>
+  </svg>
+</template>
+<style>
+  :root {
+    /* light */
+    --l-bg: #fbfaf7;
+    --l-surface: #ffffff;
+    --l-surface-2: #f3f1ec;
+    --l-border: #e7e3da;
+    --l-border-strong: #d9d4c8;
+    --l-fg: #1a1a1f;
+    --l-fg-2: #5b5a55;
+    --l-fg-3: #8a877f;
+    --l-accent: oklch(0.55 0.18 275);
+    --l-accent-soft: oklch(0.95 0.04 275);
+    --l-success: oklch(0.55 0.14 150);
+    --l-warning: oklch(0.6  0.16 60);
+    --l-danger:  oklch(0.55 0.18 25);
+
+    /* dark */
+    --d-bg: #0e0e12;
+    --d-surface: #16161c;
+    --d-surface-2: #1d1d24;
+    --d-border: #26262f;
+    --d-border-strong: #34343f;
+    --d-fg: #f0eee8;
+    --d-fg-2: #a4a299;
+    --d-fg-3: #6a6862;
+    --d-accent: oklch(0.72 0.16 275);
+    --d-accent-soft: oklch(0.28 0.08 275);
+    --d-success: oklch(0.72 0.16 150);
+    --d-warning: oklch(0.78 0.16 70);
+    --d-danger:  oklch(0.7  0.18 25);
+
+    font-family: "Geist", ui-sans-serif, system-ui, sans-serif;
+    color: var(--l-fg);
+  }
+
+  body { margin: 0; background: #efece5; padding: 40px 24px 80px; }
+  .doc { max-width: 980px; margin: 0 auto; }
+
+  .doc-header { margin-bottom: 32px; }
+  .doc-eyebrow {
+    font-family: "Geist Mono", monospace;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #87837a;
+    margin-bottom: 8px;
+  }
+  .doc-title { font-size: 32px; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 8px; }
+  .doc-sub { font-size: 14px; color: #5b5a55; max-width: 560px; line-height: 1.55; }
+
+  .meta-row {
+    display: flex; gap: 12px; flex-wrap: wrap;
+    margin-top: 18px;
+    font-family: "Geist Mono", monospace;
+    font-size: 11px;
+    color: #5b5a55;
+  }
+  .meta-row .tag {
+    padding: 4px 10px;
+    border: 1px solid #d9d4c8;
+    border-radius: 999px;
+    background: #fbfaf7;
+  }
+  .meta-row .tag b { color: #1a1a1f; font-weight: 500; }
+
+  /* Section heading */
+  .screen-heading {
+    display: flex; align-items: baseline; gap: 14px;
+    margin: 56px 0 18px;
+  }
+  .screen-heading .num {
+    font-family: "Geist Mono", monospace;
+    font-size: 12px; color: #87837a; letter-spacing: 0.1em;
+  }
+  .screen-heading .title { font-size: 20px; font-weight: 600; letter-spacing: -0.01em; }
+  .screen-heading .slug {
+    font-family: "Geist Mono", monospace;
+    font-size: 11px;
+    background: #ece8de;
+    color: #5b5a55;
+    padding: 3px 8px;
+    border-radius: 6px;
+  }
+
+  /* Pair grid */
+  .pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+  }
+  .theme-cap {
+    display: flex; align-items: center; gap: 6px;
+    font-family: "Geist Mono", monospace;
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: #87837a;
+    margin-bottom: 8px;
+  }
+  .theme-cap .dot { width: 8px; height: 8px; border-radius: 50%; background: #1a1a1f; }
+  .theme-cap.dark .dot { background: #f0eee8; }
+
+  /* Device frame */
+  .frame {
+    border-radius: 36px;
+    padding: 10px;
+    position: relative;
+  }
+  .frame.light { background: linear-gradient(180deg, #efece5, #e2ddd0); border: 1px solid #d4cebe; }
+  .frame.dark  { background: linear-gradient(180deg, #1a1a20, #0b0b0f); border: 1px solid #2a2a33; }
+
+  .screen {
+    border-radius: 28px;
+    overflow: hidden;
+    min-height: 640px;
+    display: flex; flex-direction: column;
+    font-size: 14px;
+    line-height: 1.4;
+  }
+  .screen.light { background: var(--l-bg); color: var(--l-fg); }
+  .screen.dark  { background: var(--d-bg); color: var(--d-fg); }
+
+  /* Status bar */
+  .statusbar {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 14px 22px 6px;
+    font-family: "Geist Mono", monospace;
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .statusbar .right { display: flex; gap: 6px; align-items: center; opacity: 0.8; }
+  .statusbar .right i { font-size: 13px; }
+
+  /* App bar */
+  .appbar {
+    display: flex; align-items: center; gap: 12px;
+    padding: 8px 20px 16px;
+  }
+  .appbar .back {
+    width: 36px; height: 36px;
+    display: grid; place-items: center;
+    border-radius: 12px;
+    font-size: 18px;
+  }
+  .screen.light .appbar .back { background: var(--l-surface); border: 1px solid var(--l-border); }
+  .screen.dark  .appbar .back { background: var(--d-surface); border: 1px solid var(--d-border); }
+  .appbar h1 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+  .appbar .spacer { flex: 1; }
+  .appbar .icon-btn {
+    width: 36px; height: 36px;
+    display: grid; place-items: center;
+    border-radius: 12px;
+    font-size: 17px;
+  }
+  .screen.light .appbar .icon-btn { color: var(--l-fg-2); }
+  .screen.dark  .appbar .icon-btn { color: var(--d-fg-2); }
+
+  /* Search */
+  .search {
+    margin: 4px 20px 16px;
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    font-size: 14px;
+  }
+  .screen.light .search { background: var(--l-surface); border: 1px solid var(--l-border); box-shadow: 0 1px 0 rgba(20,20,30,0.02); }
+  .screen.dark  .search { background: var(--d-surface); border: 1px solid var(--d-border); }
+  .search input { flex: 1; background: transparent; border: 0; outline: 0; font: inherit; color: inherit; }
+  .screen.light .search input::placeholder { color: var(--l-fg-3); }
+  .screen.dark  .search input::placeholder { color: var(--d-fg-3); }
+  .search i { font-size: 16px; }
+  .screen.light .search .lead { color: var(--l-fg-2); }
+  .screen.dark  .search .lead { color: var(--d-fg-2); }
+  .search kbd {
+    font-family: "Geist Mono", monospace;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 6px;
+    letter-spacing: 0.06em;
+  }
+  .screen.light .search kbd { background: var(--l-surface-2); color: var(--l-fg-2); border: 1px solid var(--l-border); }
+  .screen.dark  .search kbd { background: var(--d-surface-2); color: var(--d-fg-2); border: 1px solid var(--d-border); }
+
+  /* Chip rail */
+  .chips {
+    display: flex; gap: 8px; padding: 0 20px 14px;
+    overflow-x: auto;
+  }
+  .chip {
+    padding: 7px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .screen.light .chip { background: var(--l-surface); border: 1px solid var(--l-border); color: var(--l-fg-2); }
+  .screen.dark  .chip { background: var(--d-surface); border: 1px solid var(--d-border); color: var(--d-fg-2); }
+  .screen.light .chip.active { background: var(--l-fg); color: var(--l-bg); border-color: var(--l-fg); }
+  .screen.dark  .chip.active { background: var(--d-fg); color: var(--d-bg); border-color: var(--d-fg); }
+  .chip i { font-size: 12px; }
+
+  /* Section title */
+  .sec-title {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 4px 20px 10px;
+  }
+  .sec-title .h {
+    font-family: "Geist Mono", monospace;
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+  .screen.light .sec-title .h { color: var(--l-fg-3); }
+  .screen.dark  .sec-title .h { color: var(--d-fg-3); }
+  .sec-title .link { font-size: 12px; font-weight: 500; }
+  .screen.light .sec-title .link { color: var(--l-accent); }
+  .screen.dark  .sec-title .link { color: var(--d-accent); }
+
+  /* Repo card list */
+  .repo-list { padding: 0 20px; display: flex; flex-direction: column; gap: 10px; }
+  .repo-card {
+    padding: 14px;
+    border-radius: 16px;
+    display: flex; gap: 12px;
+  }
+  .screen.light .repo-card { background: var(--l-surface); border: 1px solid var(--l-border); }
+  .screen.dark  .repo-card { background: var(--d-surface); border: 1px solid var(--d-border); }
+
+  .avatar {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    flex-shrink: 0;
+    background-size: cover;
+    position: relative;
+    overflow: hidden;
+  }
+  .avatar.gradA { background: linear-gradient(135deg, oklch(0.7 0.18 30), oklch(0.55 0.2 350)); }
+  .avatar.gradB { background: linear-gradient(135deg, oklch(0.75 0.16 200), oklch(0.55 0.18 260)); }
+  .avatar.gradC { background: linear-gradient(135deg, oklch(0.75 0.18 120), oklch(0.55 0.18 180)); }
+  .avatar.gradD { background: linear-gradient(135deg, oklch(0.78 0.16 80), oklch(0.6 0.2 30)); }
+  .avatar.gradE { background: linear-gradient(135deg, oklch(0.7 0.16 290), oklch(0.5 0.2 320)); }
+
+  .repo-main { flex: 1; min-width: 0; }
+  .repo-name {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .repo-name .owner { font-weight: 400; font-family: "Geist Mono", monospace; font-size: 12px; }
+  .screen.light .repo-name .owner { color: var(--l-fg-3); }
+  .screen.dark  .repo-name .owner { color: var(--d-fg-3); }
+  .repo-name .slash { opacity: 0.45; }
+  .repo-desc {
+    font-size: 13px;
+    line-height: 1.5;
+    margin-top: 4px;
+  }
+  .screen.light .repo-desc { color: var(--l-fg-2); }
+  .screen.dark  .repo-desc { color: var(--d-fg-2); }
+  .repo-meta {
+    display: flex; gap: 14px; flex-wrap: wrap;
+    margin-top: 10px;
+    font-family: "Geist Mono", monospace;
+    font-size: 11px;
+  }
+  .screen.light .repo-meta { color: var(--l-fg-2); }
+  .screen.dark  .repo-meta { color: var(--d-fg-2); }
+  .repo-meta span { display: flex; align-items: center; gap: 5px; }
+  .repo-meta i { font-size: 12px; }
+  .lang-dot { width: 9px; height: 9px; border-radius: 50%; }
+
+  /* Loader row */
+  .loader-row {
+    margin: 18px 20px;
+    padding: 12px;
+    border-radius: 14px;
+    text-align: center;
+    font-family: "Geist Mono", monospace;
+    font-size: 11px;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .screen.light .loader-row { background: var(--l-surface); border: 1px dashed var(--l-border-strong); color: var(--l-fg-3); }
+  .screen.dark  .loader-row { background: var(--d-surface); border: 1px dashed var(--d-border-strong); color: var(--d-fg-3); }
+  .loader-row .pulse {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: currentColor; animation: pulse 1.2s infinite ease-in-out;
+  }
+  @keyframes pulse { 0%, 100% { opacity: 0.3 } 50% { opacity: 1 } }
+
+  /* Bottom nav */
+  .bottom-nav {
+    margin-top: auto;
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    padding: 12px 16px 20px;
+    border-top: 1px solid;
+  }
+  .screen.light .bottom-nav { border-color: var(--l-border); background: var(--l-bg); }
+  .screen.dark  .bottom-nav { border-color: var(--d-border); background: var(--d-bg); }
+  .bnav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 10px; font-family: "Geist Mono", monospace; letter-spacing: 0.08em; text-transform: uppercase; }
+  .bnav-item i { font-size: 20px; }
+  .screen.light .bnav-item { color: var(--l-fg-3); }
+  .screen.dark  .bnav-item { color: var(--d-fg-3); }
+  .screen.light .bnav-item.active { color: var(--l-fg); }
+  .screen.dark  .bnav-item.active { color: var(--d-fg); }
+
+  /* ===== Detail screen ===== */
+  .detail-hero {
+    margin: 4px 20px 18px;
+    padding: 20px;
+    border-radius: 20px;
+    position: relative; overflow: hidden;
+  }
+  .screen.light .detail-hero {
+    background: linear-gradient(135deg, var(--l-accent-soft), var(--l-surface));
+    border: 1px solid var(--l-border);
+  }
+  .screen.dark .detail-hero {
+    background: linear-gradient(135deg, var(--d-accent-soft), var(--d-surface));
+    border: 1px solid var(--d-border);
+  }
+  .detail-hero .owner-row { display: flex; align-items: center; gap: 10px; }
+  .avatar-md { width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0; }
+  .owner-name { font-size: 13px; font-family: "Geist Mono", monospace; }
+  .screen.light .owner-name { color: var(--l-fg-2); }
+  .screen.dark  .owner-name { color: var(--d-fg-2); }
+  .repo-title {
+    font-size: 26px;
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    margin: 12px 0 6px;
+    line-height: 1.1;
+  }
+  .detail-desc { font-size: 14px; line-height: 1.55; }
+  .screen.light .detail-desc { color: var(--l-fg-2); }
+  .screen.dark  .detail-desc { color: var(--d-fg-2); }
+
+  .topics { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 14px; }
+  .topic {
+    font-family: "Geist Mono", monospace;
+    font-size: 11px;
+    padding: 4px 9px;
+    border-radius: 8px;
+  }
+  .screen.light .topic { background: var(--l-surface); border: 1px solid var(--l-border); color: var(--l-fg-2); }
+  .screen.dark  .topic { background: var(--d-surface); border: 1px solid var(--d-border); color: var(--d-fg-2); }
+
+  .stats-row {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+    margin: 0 20px 18px;
+  }
+  .stat {
+    padding: 14px;
+    border-radius: 14px;
+  }
+  .screen.light .stat { background: var(--l-surface); border: 1px solid var(--l-border); }
+  .screen.dark  .stat { background: var(--d-surface); border: 1px solid var(--d-border); }
+  .stat-label {
+    font-family: "Geist Mono", monospace;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .screen.light .stat-label { color: var(--l-fg-3); }
+  .screen.dark  .stat-label { color: var(--d-fg-3); }
+  .stat-num {
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+  .stat-sub {
+    font-family: "Geist Mono", monospace;
+    font-size: 11px;
+    margin-top: 4px;
+  }
+  .screen.light .stat-sub { color: var(--l-success); }
+  .screen.dark  .stat-sub { color: var(--d-success); }
+
+  .info-row {
+    margin: 0 20px 12px;
+    padding: 14px;
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 13px;
+  }
+  .screen.light .info-row { background: var(--l-surface); border: 1px solid var(--l-border); }
+  .screen.dark  .info-row { background: var(--d-surface); border: 1px solid var(--d-border); }
+  .info-row .lhs { display: flex; align-items: center; gap: 10px; }
+  .info-row .lhs i { font-size: 16px; }
+  .screen.light .info-row .lhs i { color: var(--l-fg-2); }
+  .screen.dark  .info-row .lhs i { color: var(--d-fg-2); }
+  .info-row .lhs b { font-weight: 500; font-size: 13px; }
+  .info-row .rhs { font-family: "Geist Mono", monospace; font-size: 12px; }
+  .screen.light .info-row .rhs { color: var(--l-fg-3); }
+  .screen.dark  .info-row .rhs { color: var(--d-fg-3); }
+
+  .btn-primary {
+    margin: 4px 20px 20px;
+    padding: 14px;
+    border-radius: 14px;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 600;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .screen.light .btn-primary { background: var(--l-fg); color: var(--l-bg); }
+  .screen.dark  .btn-primary { background: var(--d-fg); color: var(--d-bg); }
+  .btn-primary i { font-size: 16px; }
+
+  /* Issues screen */
+  .issue-count {
+    display: flex; align-items: baseline; gap: 8px;
+    padding: 4px 20px 12px;
+  }
+  .issue-count .big { font-size: 32px; font-weight: 600; letter-spacing: -0.025em; line-height: 1; }
+  .issue-count .lbl { font-family: "Geist Mono", monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; }
+  .screen.light .issue-count .lbl { color: var(--l-fg-3); }
+  .screen.dark  .issue-count .lbl { color: var(--d-fg-3); }
+  .issue-count .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--l-success); margin: 0 4px 2px; align-self: center; }
+  .screen.dark .issue-count .dot { background: var(--d-success); }
+
+  .issue-list { padding: 0 20px; display: flex; flex-direction: column; gap: 10px; }
+  .issue-card {
+    padding: 14px;
+    border-radius: 16px;
+    display: flex; gap: 12px;
+  }
+  .screen.light .issue-card { background: var(--l-surface); border: 1px solid var(--l-border); }
+  .screen.dark  .issue-card { background: var(--d-surface); border: 1px solid var(--d-border); }
+  .issue-icon {
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    display: grid; place-items: center;
+    flex-shrink: 0;
+    font-size: 14px;
+  }
+  .screen.light .issue-icon { background: oklch(0.95 0.05 150); color: var(--l-success); }
+  .screen.dark  .issue-icon { background: oklch(0.22 0.05 150); color: var(--d-success); }
+  .issue-title { font-size: 14px; font-weight: 500; line-height: 1.4; }
+  .issue-labels { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  .lbl {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-weight: 500;
+    font-family: "Geist Mono", monospace;
+    letter-spacing: 0.02em;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .lbl::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: 0.7; }
+  .screen.light .lbl.bug  { background: oklch(0.96 0.04 25);  color: var(--l-danger); }
+  .screen.dark  .lbl.bug  { background: oklch(0.25 0.06 25);  color: var(--d-danger); }
+  .screen.light .lbl.enh  { background: oklch(0.95 0.04 275); color: var(--l-accent); }
+  .screen.dark  .lbl.enh  { background: oklch(0.25 0.06 275); color: var(--d-accent); }
+  .screen.light .lbl.docs { background: oklch(0.96 0.04 150); color: var(--l-success); }
+  .screen.dark  .lbl.docs { background: oklch(0.22 0.05 150); color: var(--d-success); }
+  .screen.light .lbl.warn { background: oklch(0.97 0.05 70);  color: var(--l-warning); }
+  .screen.dark  .lbl.warn { background: oklch(0.25 0.06 70);  color: var(--d-warning); }
+
+  .issue-meta {
+    font-family: "Geist Mono", monospace;
+    font-size: 11px;
+    margin-top: 10px;
+    display: flex; gap: 10px; flex-wrap: wrap;
+  }
+  .screen.light .issue-meta { color: var(--l-fg-3); }
+  .screen.dark  .issue-meta { color: var(--d-fg-3); }
+  .issue-meta .handle { font-weight: 500; }
+  .screen.light .issue-meta .handle { color: var(--l-accent); }
+  .screen.dark  .issue-meta .handle { color: var(--d-accent); }
+  .issue-meta .sep { opacity: 0.4; }
+
+  /* Showcase screen */
+  .show-grid { padding: 0 20px; }
+  .show-block { margin-bottom: 18px; }
+  .show-h {
+    font-family: "Geist Mono", monospace;
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .screen.light .show-h { color: var(--l-fg-3); }
+  .screen.dark  .show-h { color: var(--d-fg-3); }
+
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .btn {
+    padding: 9px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 500;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .screen.light .btn.primary { background: var(--l-fg); color: var(--l-bg); }
+  .screen.dark  .btn.primary { background: var(--d-fg); color: var(--d-bg); }
+  .screen.light .btn.accent  { background: var(--l-accent); color: #fff; }
+  .screen.dark  .btn.accent  { background: var(--d-accent); color: var(--d-bg); }
+  .screen.light .btn.outline { background: transparent; color: var(--l-fg); border: 1px solid var(--l-border-strong); }
+  .screen.dark  .btn.outline { background: transparent; color: var(--d-fg); border: 1px solid var(--d-border-strong); }
+  .screen.light .btn.ghost   { background: transparent; color: var(--l-accent); }
+  .screen.dark  .btn.ghost   { background: transparent; color: var(--d-accent); }
+  .btn.disabled { opacity: 0.45; }
+  .btn i { font-size: 14px; }
+
+  .field {
+    padding: 11px 14px;
+    border-radius: 12px;
+    font-size: 13px;
+    width: 100%; box-sizing: border-box;
+  }
+  .screen.light .field { background: var(--l-surface); border: 1px solid var(--l-border); color: var(--l-fg); }
+  .screen.dark  .field { background: var(--d-surface); border: 1px solid var(--d-border); color: var(--d-fg); }
+  .screen.light .field.error { border-color: var(--l-danger); background: oklch(0.98 0.02 25); }
+  .screen.dark  .field.error { border-color: var(--d-danger); background: oklch(0.18 0.05 25); }
+  .helper { font-size: 11px; margin-top: 6px; font-family: "Geist Mono", monospace; }
+  .screen.light .helper.muted { color: var(--l-fg-3); }
+  .screen.dark  .helper.muted { color: var(--d-fg-3); }
+  .screen.light .helper.err   { color: var(--l-danger); }
+  .screen.dark  .helper.err   { color: var(--d-danger); }
+
+  .surface-card {
+    padding: 14px;
+    border-radius: 14px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .screen.light .surface-card { background: var(--l-surface); border: 1px solid var(--l-border); }
+  .screen.dark  .surface-card { background: var(--d-surface); border: 1px solid var(--d-border); }
+  .surface-card .meta-block { flex: 1; }
+  .surface-card .name { font-weight: 600; font-size: 14px; }
+  .surface-card .sub { font-family: "Geist Mono", monospace; font-size: 11px; }
+  .screen.light .surface-card .sub { color: var(--l-fg-3); }
+  .screen.dark  .surface-card .sub { color: var(--d-fg-3); }
+
+  .swatch-row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+  .swatch { aspect-ratio: 1; border-radius: 10px; display: flex; align-items: flex-end; padding: 6px; font-family: "Geist Mono", monospace; font-size: 9px; }
+  .screen.light .swatch { color: rgba(255,255,255,0.85); }
+  .screen.dark  .swatch { color: rgba(255,255,255,0.85); }
+
+  /* Footer note */
+  .doc-foot {
+    margin-top: 56px;
+    padding-top: 24px;
+    border-top: 1px solid #d9d4c8;
+    font-family: "Geist Mono", monospace;
+    font-size: 11px;
+    color: #87837a;
+    line-height: 1.6;
+  }
+  .doc-foot a { color: #5b5a55; }
+
+  /* ===== Saved screen ===== */
+  .collection-grid {
+    padding: 0 20px 12px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+  }
+  .collection-card {
+    padding: 14px;
+    border-radius: 16px;
+    display: flex; flex-direction: column; gap: 10px;
+    min-height: 110px;
+    position: relative; overflow: hidden;
+  }
+  .screen.light .collection-card { background: var(--l-surface); border: 1px solid var(--l-border); }
+  .screen.dark  .collection-card { background: var(--d-surface); border: 1px solid var(--d-border); }
+  .collection-card .ico {
+    width: 32px; height: 32px;
+    border-radius: 10px;
+    display: grid; place-items: center;
+    font-size: 16px;
+    color: #fff;
+  }
+  .collection-card .name { font-size: 14px; font-weight: 600; letter-spacing: -0.01em; }
+  .collection-card .count {
+    font-family: "Geist Mono", monospace;
+    font-size: 11px;
+  }
+  .screen.light .collection-card .count { color: var(--l-fg-3); }
+  .screen.dark  .collection-card .count { color: var(--d-fg-3); }
+  .collection-card .stack {
+    display: flex; gap: -8px; margin-top: auto;
+  }
+  .collection-card .stack > * { margin-left: -8px; border: 2px solid; }
+  .collection-card .stack > *:first-child { margin-left: 0; }
+  .screen.light .collection-card .stack > * { border-color: var(--l-surface); }
+  .screen.dark  .collection-card .stack > * { border-color: var(--d-surface); }
+  .mini-avatar { width: 22px; height: 22px; border-radius: 7px; }
+
+  /* ===== Feed screen ===== */
+  .feed-list { padding: 0 20px; display: flex; flex-direction: column; gap: 4px; }
+  .activity-item {
+    padding: 14px 4px;
+    display: flex; gap: 12px;
+    border-bottom: 1px solid;
+  }
+  .screen.light .activity-item { border-color: var(--l-border); }
+  .screen.dark  .activity-item { border-color: var(--d-border); }
+  .activity-item:last-child { border-bottom: 0; }
+  .activity-item .a-icon {
+    width: 32px; height: 32px;
+    border-radius: 10px;
+    display: grid; place-items: center;
+    flex-shrink: 0;
+    font-size: 14px;
+  }
+  .screen.light .a-icon.star { background: oklch(0.96 0.06 80); color: oklch(0.55 0.16 60); }
+  .screen.dark  .a-icon.star { background: oklch(0.25 0.06 70); color: oklch(0.8 0.16 70); }
+  .screen.light .a-icon.fork { background: oklch(0.95 0.04 275); color: var(--l-accent); }
+  .screen.dark  .a-icon.fork { background: oklch(0.25 0.06 275); color: var(--d-accent); }
+  .screen.light .a-icon.release { background: oklch(0.95 0.05 150); color: var(--l-success); }
+  .screen.dark  .a-icon.release { background: oklch(0.22 0.05 150); color: var(--d-success); }
+  .screen.light .a-icon.pr { background: oklch(0.95 0.04 320); color: oklch(0.55 0.2 320); }
+  .screen.dark  .a-icon.pr { background: oklch(0.25 0.06 320); color: oklch(0.78 0.16 320); }
+  .activity-item .body { flex: 1; min-width: 0; }
+  .activity-item .line { font-size: 13px; line-height: 1.5; }
+  .screen.light .activity-item .line { color: var(--l-fg); }
+  .screen.dark  .activity-item .line { color: var(--d-fg); }
+  .activity-item .line b { font-weight: 600; }
+  .activity-item .line .handle { font-family: "Geist Mono", monospace; font-weight: 500; }
+  .screen.light .activity-item .line .handle { color: var(--l-accent); }
+  .screen.dark  .activity-item .line .handle { color: var(--d-accent); }
+  .activity-item .time {
+    font-family: "Geist Mono", monospace;
+    font-size: 11px;
+    margin-top: 4px;
+  }
+  .screen.light .activity-item .time { color: var(--l-fg-3); }
+  .screen.dark  .activity-item .time { color: var(--d-fg-3); }
+  .activity-item .preview {
+    margin-top: 8px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    font-size: 12px;
+  }
+  .screen.light .activity-item .preview { background: var(--l-surface); border: 1px solid var(--l-border); }
+  .screen.dark  .activity-item .preview { background: var(--d-surface); border: 1px solid var(--d-border); }
+  .preview .p-head { display: flex; align-items: center; gap: 6px; font-weight: 600; }
+  .preview .p-sub { margin-top: 3px; }
+  .screen.light .preview .p-sub { color: var(--l-fg-2); }
+  .screen.dark  .preview .p-sub { color: var(--d-fg-2); }
+  .preview .p-tag {
+    display: inline-block;
+    font-family: "Geist Mono", monospace;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 6px;
+    margin-left: 4px;
+  }
+  .screen.light .preview .p-tag { background: var(--l-surface-2); color: var(--l-fg-2); }
+  .screen.dark  .preview .p-tag { background: var(--d-surface-2); color: var(--d-fg-2); }
+
+  /* ===== Profile screen ===== */
+  .profile-hero {
+    padding: 4px 20px 18px;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .avatar-xl {
+    width: 68px; height: 68px; border-radius: 20px;
+  }
+  .profile-name { font-size: 24px; font-weight: 600; letter-spacing: -0.025em; line-height: 1; }
+  .profile-handle {
+    font-family: "Geist Mono", monospace;
+    font-size: 13px;
+    margin-top: 4px;
+  }
+  .screen.light .profile-handle { color: var(--l-fg-3); }
+  .screen.dark  .profile-handle { color: var(--d-fg-3); }
+  .profile-bio { font-size: 14px; line-height: 1.5; margin-top: 8px; }
+  .screen.light .profile-bio { color: var(--l-fg-2); }
+  .screen.dark  .profile-bio { color: var(--d-fg-2); }
+  .profile-meta { display: flex; gap: 16px; flex-wrap: wrap; font-family: "Geist Mono", monospace; font-size: 12px; margin-top: 4px; }
+  .screen.light .profile-meta { color: var(--l-fg-2); }
+  .screen.dark  .profile-meta { color: var(--d-fg-2); }
+  .profile-meta span { display: flex; align-items: center; gap: 5px; }
+  .profile-meta i { font-size: 13px; }
+  .profile-meta b { font-weight: 600; color: inherit; }
+  .screen.light .profile-meta b { color: var(--l-fg); }
+  .screen.dark  .profile-meta b { color: var(--d-fg); }
+
+  .contrib-card {
+    margin: 0 20px 16px;
+    padding: 14px;
+    border-radius: 16px;
+  }
+  .screen.light .contrib-card { background: var(--l-surface); border: 1px solid var(--l-border); }
+  .screen.dark  .contrib-card { background: var(--d-surface); border: 1px solid var(--d-border); }
+  .contrib-head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 12px;
+  }
+  .contrib-title { font-size: 13px; font-weight: 600; }
+  .contrib-num { font-family: "Geist Mono", monospace; font-size: 11px; }
+  .screen.light .contrib-num { color: var(--l-fg-3); }
+  .screen.dark  .contrib-num { color: var(--d-fg-3); }
+  .contrib-grid {
+    display: grid;
+    grid-template-columns: repeat(20, 1fr);
+    grid-auto-rows: 1fr;
+    gap: 3px;
+    aspect-ratio: 20 / 7;
+  }
+  .contrib-cell {
+    border-radius: 3px;
+    background: var(--cell-bg);
+  }
+
+  .pinned-list { padding: 0 20px; display: flex; flex-direction: column; gap: 10px; }
+  .pinned-card {
+    padding: 14px;
+    border-radius: 16px;
+  }
+  .screen.light .pinned-card { background: var(--l-surface); border: 1px solid var(--l-border); }
+  .screen.dark  .pinned-card { background: var(--d-surface); border: 1px solid var(--d-border); }
+  .pinned-head {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 6px;
+  }
+  .pinned-head .pin {
+    font-size: 13px;
+  }
+  .screen.light .pinned-head .pin { color: var(--l-fg-3); }
+  .screen.dark  .pinned-head .pin { color: var(--d-fg-3); }
+  .pinned-head .pname { font-weight: 600; font-size: 14px; }
+  .pinned-desc { font-size: 12px; line-height: 1.5; margin-bottom: 8px; }
+  .screen.light .pinned-desc { color: var(--l-fg-2); }
+  .screen.dark  .pinned-desc { color: var(--d-fg-2); }
+  .pinned-foot {
+    display: flex; gap: 14px;
+    font-family: "Geist Mono", monospace;
+    font-size: 11px;
+  }
+  .screen.light .pinned-foot { color: var(--l-fg-3); }
+  .screen.dark  .pinned-foot { color: var(--d-fg-3); }
+  .pinned-foot span { display: flex; align-items: center; gap: 4px; }
+
+  /* Allow main content to scroll behind sticky bottom nav */
+  .screen-body { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+
+  @media (max-width: 760px) {
+    .pair { grid-template-columns: 1fr; }
+    body { padding: 24px 12px 40px; }
+  }
+</style>
+</head>
+<body>
+<div class="doc">
+
+  <div class="doc-header">
+    <div class="doc-eyebrow">App mobile · cliente GitHub API · recriação</div>
+    <h1 class="doc-title">Octolens<span style="color:oklch(0.55 0.18 275);">.</span></h1>
+    <div class="doc-sub">Um app cliente conceitual que consome a <b>REST API do GitHub</b> — 4 abas principais (Explore, Saved, Feed, Profile) + 3 telas em stack (Detail, Issues, Design System). Linguagem visual própria: tipografia Geist, paleta âmbar-quente, acento violeta-azul. Inspirado no design do GitHub sem clonar a marca.</div>
+    <div class="meta-row">
+      <div class="tag"><b>Arquitetura:</b> 4 tab screens + 3 stack screens</div>
+      <div class="tag"><b>Endpoints:</b> /search/repositories · /repos · /issues · /users/{me}/starred · /users/{me}/events</div>
+      <div class="tag"><b>Stack:</b> React Native + Tanstack Query</div>
+      <div class="tag"><b>Temas:</b> light + dark</div>
+    </div>
+  </div>
+
+  <!-- ========== TELA 1: BUSCA ========== -->
+  <div class="screen-heading">
+    <div class="num">01</div>
+    <div class="title">Explorar repositórios</div>
+    <div class="slug">SearchScreen.tsx</div>
+  </div>
+  <div class="pair">
+
+    <div>
+      <div class="theme-cap"><span class="dot"></span> Light</div>
+      <div class="frame light">
+        <div class="screen light">
+          <div class="statusbar"><span>9:41</span><span class="right"><i class="ti ti-signal-4g"></i><i class="ti ti-wifi"></i><i class="ti ti-battery-3"></i></span></div>
+          <div class="appbar">
+            <h1>Explorar</h1>
+            <div class="spacer"></div>
+            <div class="icon-btn"><i class="ti ti-adjustments-horizontal"></i></div>
+            <div class="icon-btn"><i class="ti ti-bell"></i></div>
+          </div>
+          <div class="search">
+            <i class="ti ti-search lead"></i>
+            <input value="react native" readonly />
+            <kbd>⌘K</kbd>
+          </div>
+          <div class="chips">
+            <div class="chip active"><i class="ti ti-flame"></i>Trending</div>
+            <div class="chip">Mobile</div>
+            <div class="chip">TypeScript</div>
+            <div class="chip">Rust</div>
+            <div class="chip">AI</div>
+          </div>
+          <div class="sec-title">
+            <div class="h">Top resultados · 24.318</div>
+            <div class="link">Filtros</div>
+          </div>
+          <div class="repo-list">
+            <div class="repo-card">
+              <div class="avatar gradB"></div>
+              <div class="repo-main">
+                <div class="repo-name"><span class="owner">facebook</span><span class="slash">/</span>react-native</div>
+                <div class="repo-desc">A framework for building native apps using React. Learn once, write anywhere.</div>
+                <div class="repo-meta">
+                  <span><i class="ti ti-star-filled" style="color:oklch(0.7 0.16 80);"></i>120k</span>
+                  <span><span class="lang-dot" style="background:#3178c6"></span>TypeScript</span>
+                  <span><i class="ti ti-git-fork"></i>24k</span>
+                  <span><i class="ti ti-clock"></i>2h</span>
+                </div>
+              </div>
+            </div>
+            <div class="repo-card">
+              <div class="avatar gradA"></div>
+              <div class="repo-main">
+                <div class="repo-name"><span class="owner">expo</span><span class="slash">/</span>expo</div>
+                <div class="repo-desc">An open-source platform for making universal native apps with React.</div>
+                <div class="repo-meta">
+                  <span><i class="ti ti-star-filled" style="color:oklch(0.7 0.16 80);"></i>32k</span>
+                  <span><span class="lang-dot" style="background:#3178c6"></span>TypeScript</span>
+                  <span><i class="ti ti-git-fork"></i>5k</span>
+                </div>
+              </div>
+            </div>
+            <div class="repo-card">
+              <div class="avatar gradE"></div>
+              <div class="repo-main">
+                <div class="repo-name"><span class="owner">software-mansion</span><span class="slash">/</span>react-native-reanimated</div>
+                <div class="repo-desc">React Native's Animated library reimplemented.</div>
+                <div class="repo-meta">
+                  <span><i class="ti ti-star-filled" style="color:oklch(0.7 0.16 80);"></i>9.2k</span>
+                  <span><span class="lang-dot" style="background:#f1e05a"></span>JavaScript</span>
+                  <span><i class="ti ti-git-fork"></i>1.4k</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="loader-row"><span class="pulse"></span> Carregando próxima página…</div>
+          <div class="bottom-nav">
+            <div class="bnav-item active"><i class="ti ti-compass"></i>Explore</div>
+            <div class="bnav-item"><i class="ti ti-bookmark"></i>Saved</div>
+            <div class="bnav-item"><i class="ti ti-activity"></i>Feed</div>
+            <div class="bnav-item"><i class="ti ti-user"></i>Me</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="theme-cap dark"><span class="dot"></span> Dark</div>
+      <div class="frame dark">
+        <div class="screen dark">
+          <div class="statusbar"><span>9:41</span><span class="right"><i class="ti ti-signal-4g"></i><i class="ti ti-wifi"></i><i class="ti ti-battery-3"></i></span></div>
+          <div class="appbar">
+            <h1>Explorar</h1>
+            <div class="spacer"></div>
+            <div class="icon-btn"><i class="ti ti-adjustments-horizontal"></i></div>
+            <div class="icon-btn"><i class="ti ti-bell"></i></div>
+          </div>
+          <div class="search">
+            <i class="ti ti-search lead"></i>
+            <input value="react native" readonly />
+            <kbd>⌘K</kbd>
+          </div>
+          <div class="chips">
+            <div class="chip active"><i class="ti ti-flame"></i>Trending</div>
+            <div class="chip">Mobile</div>
+            <div class="chip">TypeScript</div>
+            <div class="chip">Rust</div>
+            <div class="chip">AI</div>
+          </div>
+          <div class="sec-title">
+            <div class="h">Top resultados · 24.318</div>
+            <div class="link">Filtros</div>
+          </div>
+          <div class="repo-list">
+            <div class="repo-card">
+              <div class="avatar gradB"></div>
+              <div class="repo-main">
+                <div class="repo-name"><span class="owner">facebook</span><span class="slash">/</span>react-native</div>
+                <div class="repo-desc">A framework for building native apps using React. Learn once, write anywhere.</div>
+                <div class="repo-meta">
+                  <span><i class="ti ti-star-filled" style="color:oklch(0.78 0.16 80);"></i>120k</span>
+                  <span><span class="lang-dot" style="background:#3178c6"></span>TypeScript</span>
+                  <span><i class="ti ti-git-fork"></i>24k</span>
+                  <span><i class="ti ti-clock"></i>2h</span>
+                </div>
+              </div>
+            </div>
+            <div class="repo-card">
+              <div class="avatar gradA"></div>
+              <div class="repo-main">
+                <div class="repo-name"><span class="owner">expo</span><span class="slash">/</span>expo</div>
+                <div class="repo-desc">An open-source platform for making universal native apps with React.</div>
+                <div class="repo-meta">
+                  <span><i class="ti ti-star-filled" style="color:oklch(0.78 0.16 80);"></i>32k</span>
+                  <span><span class="lang-dot" style="background:#3178c6"></span>TypeScript</span>
+                  <span><i class="ti ti-git-fork"></i>5k</span>
+                </div>
+              </div>
+            </div>
+            <div class="repo-card">
+              <div class="avatar gradE"></div>
+              <div class="repo-main">
+                <div class="repo-name"><span class="owner">software-mansion</span><span class="slash">/</span>react-native-reanimated</div>
+                <div class="repo-desc">React Native's Animated library reimplemented.</div>
+                <div class="repo-meta">
+                  <span><i class="ti ti-star-filled" style="color:oklch(0.78 0.16 80);"></i>9.2k</span>
+                  <span><span class="lang-dot" style="background:#f1e05a"></span>JavaScript</span>
+                  <span><i class="ti ti-git-fork"></i>1.4k</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="loader-row"><span class="pulse"></span> Carregando próxima página…</div>
+          <div class="bottom-nav">
+            <div class="bnav-item active"><i class="ti ti-compass"></i>Explore</div>
+            <div class="bnav-item"><i class="ti ti-bookmark"></i>Saved</div>
+            <div class="bnav-item"><i class="ti ti-activity"></i>Feed</div>
+            <div class="bnav-item"><i class="ti ti-user"></i>Me</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ========== TELA 2: SAVED ========== -->
+  <div class="screen-heading">
+    <div class="num">02</div>
+    <div class="title">Repositórios salvos</div>
+    <div class="slug">SavedScreen.tsx</div>
+  </div>
+  <div class="pair">
+
+    <div>
+      <div class="theme-cap"><span class="dot"></span> Light</div>
+      <div class="frame light">
+        <div class="screen light">
+          <div class="statusbar"><span>9:41</span><span class="right"><i class="ti ti-signal-4g"></i><i class="ti ti-wifi"></i><i class="ti ti-battery-3"></i></span></div>
+          <div class="appbar">
+            <h1>Salvos</h1>
+            <div class="spacer"></div>
+            <div class="icon-btn"><i class="ti ti-folder-plus"></i></div>
+            <div class="icon-btn"><i class="ti ti-dots"></i></div>
+          </div>
+          <div class="chips">
+            <div class="chip active">Coleções</div>
+            <div class="chip">Todos · 47</div>
+            <div class="chip">Recentes</div>
+          </div>
+          <div class="sec-title">
+            <div class="h">Suas coleções · 4</div>
+            <div class="link">Editar</div>
+          </div>
+          <div class="collection-grid">
+            <div class="collection-card">
+              <div class="ico" style="background:oklch(0.55 0.18 275);"><i class="ti ti-device-mobile"></i></div>
+              <div>
+                <div class="name">Mobile</div>
+                <div class="count">18 repos</div>
+              </div>
+              <div class="stack">
+                <div class="mini-avatar gradB"></div>
+                <div class="mini-avatar gradE"></div>
+                <div class="mini-avatar gradA"></div>
+              </div>
+            </div>
+            <div class="collection-card">
+              <div class="ico" style="background:oklch(0.55 0.16 30);"><i class="ti ti-server"></i></div>
+              <div>
+                <div class="name">Backend</div>
+                <div class="count">12 repos</div>
+              </div>
+              <div class="stack">
+                <div class="mini-avatar gradD"></div>
+                <div class="mini-avatar gradC"></div>
+              </div>
+            </div>
+            <div class="collection-card">
+              <div class="ico" style="background:oklch(0.55 0.14 150);"><i class="ti ti-tool"></i></div>
+              <div>
+                <div class="name">Ferramentas</div>
+                <div class="count">9 repos</div>
+              </div>
+              <div class="stack">
+                <div class="mini-avatar gradA"></div>
+                <div class="mini-avatar gradB"></div>
+                <div class="mini-avatar gradE"></div>
+              </div>
+            </div>
+            <div class="collection-card">
+              <div class="ico" style="background:oklch(0.6 0.16 70);"><i class="ti ti-sparkles"></i></div>
+              <div>
+                <div class="name">AI &amp; ML</div>
+                <div class="count">8 repos</div>
+              </div>
+              <div class="stack">
+                <div class="mini-avatar gradC"></div>
+                <div class="mini-avatar gradD"></div>
+              </div>
+            </div>
+          </div>
+          <div class="sec-title">
+            <div class="h">Salvos recentemente</div>
+          </div>
+          <div class="repo-list" style="padding-bottom: 16px;">
+            <div class="repo-card">
+              <div class="avatar gradB"></div>
+              <div class="repo-main">
+                <div class="repo-name"><span class="owner">facebook</span><span class="slash">/</span>react-native</div>
+                <div class="repo-meta">
+                  <span><i class="ti ti-bookmark-filled" style="color:oklch(0.55 0.18 275);"></i>salvo há 2h</span>
+                  <span><span class="lang-dot" style="background:#3178c6"></span>TypeScript</span>
+                </div>
+              </div>
+            </div>
+            <div class="repo-card">
+              <div class="avatar gradD"></div>
+              <div class="repo-main">
+                <div class="repo-name"><span class="owner">vercel</span><span class="slash">/</span>next.js</div>
+                <div class="repo-meta">
+                  <span><i class="ti ti-bookmark-filled" style="color:oklch(0.55 0.18 275);"></i>salvo ontem</span>
+                  <span><span class="lang-dot" style="background:#3178c6"></span>TypeScript</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="bottom-nav">
+            <div class="bnav-item"><i class="ti ti-compass"></i>Explore</div>
+            <div class="bnav-item active"><i class="ti ti-bookmark-filled"></i>Saved</div>
+            <div class="bnav-item"><i class="ti ti-activity"></i>Feed</div>
+            <div class="bnav-item"><i class="ti ti-user"></i>Me</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="theme-cap dark"><span class="dot"></span> Dark</div>
+      <div class="frame dark">
+        <div class="screen dark">
+          <div class="statusbar"><span>9:41</span><span class="right"><i class="ti ti-signal-4g"></i><i class="ti ti-wifi"></i><i class="ti ti-battery-3"></i></span></div>
+          <div class="appbar">
+            <h1>Salvos</h1>
+            <div class="spacer"></div>
+            <div class="icon-btn"><i class="ti ti-folder-plus"></i></div>
+            <div class="icon-btn"><i class="ti ti-dots"></i></div>
+          </div>
+          <div class="chips">
+            <div class="chip active">Coleções</div>
+            <div class="chip">Todos · 47</div>
+            <div class="chip">Recentes</div>
+          </div>
+          <div class="sec-title">
+            <div class="h">Suas coleções · 4</div>
+            <div class="link">Editar</div>
+          </div>
+          <div class="collection-grid">
+            <div class="collection-card">
+              <div class="ico" style="background:oklch(0.55 0.18 275);"><i class="ti ti-device-mobile"></i></div>
+              <div>
+                <div class="name">Mobile</div>
+                <div class="count">18 repos</div>
+              </div>
+              <div class="stack">
+                <div class="mini-avatar gradB"></div>
+                <div class="mini-avatar gradE"></div>
+                <div class="mini-avatar gradA"></div>
+              </div>
+            </div>
+            <div class="collection-card">
+              <div class="ico" style="background:oklch(0.55 0.16 30);"><i class="ti ti-server"></i></div>
+              <div>
+                <div class="name">Backend</div>
+                <div class="count">12 repos</div>
+              </div>
+              <div class="stack">
+                <div class="mini-avatar gradD"></div>
+                <div class="mini-avatar gradC"></div>
+              </div>
+            </div>
+            <div class="collection-card">
+              <div class="ico" style="background:oklch(0.55 0.14 150);"><i class="ti ti-tool"></i></div>
+              <div>
+                <div class="name">Ferramentas</div>
+                <div class="count">9 repos</div>
+              </div>
+              <div class="stack">
+                <div class="mini-avatar gradA"></div>
+                <div class="mini-avatar gradB"></div>
+                <div class="mini-avatar gradE"></div>
+              </div>
+            </div>
+            <div class="collection-card">
+              <div class="ico" style="background:oklch(0.6 0.16 70);"><i class="ti ti-sparkles"></i></div>
+              <div>
+                <div class="name">AI &amp; ML</div>
+                <div class="count">8 repos</div>
+              </div>
+              <div class="stack">
+                <div class="mini-avatar gradC"></div>
+                <div class="mini-avatar gradD"></div>
+              </div>
+            </div>
+          </div>
+          <div class="sec-title">
+            <div class="h">Salvos recentemente</div>
+          </div>
+          <div class="repo-list" style="padding-bottom: 16px;">
+            <div class="repo-card">
+              <div class="avatar gradB"></div>
+              <div class="repo-main">
+                <div class="repo-name"><span class="owner">facebook</span><span class="slash">/</span>react-native</div>
+                <div class="repo-meta">
+                  <span><i class="ti ti-bookmark-filled" style="color:oklch(0.72 0.16 275);"></i>salvo há 2h</span>
+                  <span><span class="lang-dot" style="background:#3178c6"></span>TypeScript</span>
+                </div>
+              </div>
+            </div>
+            <div class="repo-card">
+              <div class="avatar gradD"></div>
+              <div class="repo-main">
+                <div class="repo-name"><span class="owner">vercel</span><span class="slash">/</span>next.js</div>
+                <div class="repo-meta">
+                  <span><i class="ti ti-bookmark-filled" style="color:oklch(0.72 0.16 275);"></i>salvo ontem</span>
+                  <span><span class="lang-dot" style="background:#3178c6"></span>TypeScript</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="bottom-nav">
+            <div class="bnav-item"><i class="ti ti-compass"></i>Explore</div>
+            <div class="bnav-item active"><i class="ti ti-bookmark-filled"></i>Saved</div>
+            <div class="bnav-item"><i class="ti ti-activity"></i>Feed</div>
+            <div class="bnav-item"><i class="ti ti-user"></i>Me</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ========== TELA 3: FEED ========== -->
+  <div class="screen-heading">
+    <div class="num">03</div>
+    <div class="title">Feed de atividade</div>
+    <div class="slug">FeedScreen.tsx</div>
+  </div>
+  <div class="pair">
+
+    <div>
+      <div class="theme-cap"><span class="dot"></span> Light</div>
+      <div class="frame light">
+        <div class="screen light">
+          <div class="statusbar"><span>9:41</span><span class="right"><i class="ti ti-signal-4g"></i><i class="ti ti-wifi"></i><i class="ti ti-battery-3"></i></span></div>
+          <div class="appbar">
+            <h1>Atividade</h1>
+            <div class="spacer"></div>
+            <div class="icon-btn"><i class="ti ti-filter"></i></div>
+          </div>
+          <div class="chips">
+            <div class="chip active">Tudo</div>
+            <div class="chip">Releases</div>
+            <div class="chip">Stars</div>
+            <div class="chip">Pull requests</div>
+          </div>
+          <div class="feed-list">
+            <div class="activity-item">
+              <div class="a-icon release"><i class="ti ti-tag"></i></div>
+              <div class="body">
+                <div class="line"><span class="handle">@vercel</span> publicou <b>next@15.2.0</b></div>
+                <div class="preview">
+                  <div class="p-head"><i class="ti ti-package" style="font-size:13px;"></i>v15.2.0<span class="p-tag">latest</span></div>
+                  <div class="p-sub">Turbopack now stable for production builds.</div>
+                </div>
+                <div class="time">há 12 minutos</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="a-icon star"><i class="ti ti-star-filled"></i></div>
+              <div class="body">
+                <div class="line"><span class="handle">@sara.k</span> favoritou <b>facebook/react-native</b></div>
+                <div class="time">há 1 hora</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="a-icon pr"><i class="ti ti-git-pull-request"></i></div>
+              <div class="body">
+                <div class="line"><span class="handle">@jamie-dev</span> mergeou um PR em <b>expo/expo</b></div>
+                <div class="preview">
+                  <div class="p-head"><i class="ti ti-git-merge" style="font-size:13px; color:oklch(0.55 0.2 320);"></i>Fix Android keyboard avoiding view<span class="p-tag">#28412</span></div>
+                  <div class="p-sub">+142 −38 · 4 arquivos alterados</div>
+                </div>
+                <div class="time">há 3 horas</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="a-icon fork"><i class="ti ti-git-fork"></i></div>
+              <div class="body">
+                <div class="line"><span class="handle">@marco</span> fez fork de <b>software-mansion/react-native-reanimated</b></div>
+                <div class="time">há 6 horas</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="a-icon star"><i class="ti ti-star-filled"></i></div>
+              <div class="body">
+                <div class="line"><span class="handle">@dev.lucas</span> favoritou <b>vercel/next.js</b> e mais 2 repos</div>
+                <div class="time">ontem</div>
+              </div>
+            </div>
+          </div>
+          <div class="bottom-nav">
+            <div class="bnav-item"><i class="ti ti-compass"></i>Explore</div>
+            <div class="bnav-item"><i class="ti ti-bookmark"></i>Saved</div>
+            <div class="bnav-item active"><i class="ti ti-activity"></i>Feed</div>
+            <div class="bnav-item"><i class="ti ti-user"></i>Me</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="theme-cap dark"><span class="dot"></span> Dark</div>
+      <div class="frame dark">
+        <div class="screen dark">
+          <div class="statusbar"><span>9:41</span><span class="right"><i class="ti ti-signal-4g"></i><i class="ti ti-wifi"></i><i class="ti ti-battery-3"></i></span></div>
+          <div class="appbar">
+            <h1>Atividade</h1>
+            <div class="spacer"></div>
+            <div class="icon-btn"><i class="ti ti-filter"></i></div>
+          </div>
+          <div class="chips">
+            <div class="chip active">Tudo</div>
+            <div class="chip">Releases</div>
+            <div class="chip">Stars</div>
+            <div class="chip">Pull requests</div>
+          </div>
+          <div class="feed-list">
+            <div class="activity-item">
+              <div class="a-icon release"><i class="ti ti-tag"></i></div>
+              <div class="body">
+                <div class="line"><span class="handle">@vercel</span> publicou <b>next@15.2.0</b></div>
+                <div class="preview">
+                  <div class="p-head"><i class="ti ti-package" style="font-size:13px;"></i>v15.2.0<span class="p-tag">latest</span></div>
+                  <div class="p-sub">Turbopack now stable for production builds.</div>
+                </div>
+                <div class="time">há 12 minutos</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="a-icon star"><i class="ti ti-star-filled"></i></div>
+              <div class="body">
+                <div class="line"><span class="handle">@sara.k</span> favoritou <b>facebook/react-native</b></div>
+                <div class="time">há 1 hora</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="a-icon pr"><i class="ti ti-git-pull-request"></i></div>
+              <div class="body">
+                <div class="line"><span class="handle">@jamie-dev</span> mergeou um PR em <b>expo/expo</b></div>
+                <div class="preview">
+                  <div class="p-head"><i class="ti ti-git-merge" style="font-size:13px; color:oklch(0.78 0.16 320);"></i>Fix Android keyboard avoiding view<span class="p-tag">#28412</span></div>
+                  <div class="p-sub">+142 −38 · 4 arquivos alterados</div>
+                </div>
+                <div class="time">há 3 horas</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="a-icon fork"><i class="ti ti-git-fork"></i></div>
+              <div class="body">
+                <div class="line"><span class="handle">@marco</span> fez fork de <b>software-mansion/react-native-reanimated</b></div>
+                <div class="time">há 6 horas</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="a-icon star"><i class="ti ti-star-filled"></i></div>
+              <div class="body">
+                <div class="line"><span class="handle">@dev.lucas</span> favoritou <b>vercel/next.js</b> e mais 2 repos</div>
+                <div class="time">ontem</div>
+              </div>
+            </div>
+          </div>
+          <div class="bottom-nav">
+            <div class="bnav-item"><i class="ti ti-compass"></i>Explore</div>
+            <div class="bnav-item"><i class="ti ti-bookmark"></i>Saved</div>
+            <div class="bnav-item active"><i class="ti ti-activity"></i>Feed</div>
+            <div class="bnav-item"><i class="ti ti-user"></i>Me</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ========== TELA 4: PROFILE ========== -->
+  <div class="screen-heading">
+    <div class="num">04</div>
+    <div class="title">Perfil do usuário</div>
+    <div class="slug">ProfileScreen.tsx</div>
+  </div>
+  <div class="pair">
+
+    <div>
+      <div class="theme-cap"><span class="dot"></span> Light</div>
+      <div class="frame light">
+        <div class="screen light">
+          <div class="statusbar"><span>9:41</span><span class="right"><i class="ti ti-signal-4g"></i><i class="ti ti-wifi"></i><i class="ti ti-battery-3"></i></span></div>
+          <div class="appbar">
+            <h1>Meu perfil</h1>
+            <div class="spacer"></div>
+            <div class="icon-btn"><i class="ti ti-settings"></i></div>
+          </div>
+          <div class="profile-hero">
+            <div style="display:flex; align-items:center; gap:14px;">
+              <div class="avatar-xl gradC"></div>
+              <div style="flex:1;">
+                <div class="profile-name">Lucas Andrade</div>
+                <div class="profile-handle">@dev.lucas</div>
+              </div>
+              <div class="btn outline" style="padding:8px 14px;">Editar</div>
+            </div>
+            <div class="profile-bio">Frontend engineer · construindo apps mobile em React Native. Curador de coleções de repos.</div>
+            <div class="profile-meta">
+              <span><i class="ti ti-map-pin"></i>São Paulo, BR</span>
+              <span><i class="ti ti-link"></i>lucas.dev</span>
+            </div>
+            <div class="profile-meta">
+              <span><b>284</b> seguidores</span>
+              <span><b>132</b> seguindo</span>
+              <span><b>47</b> repos</span>
+            </div>
+          </div>
+          <div class="contrib-card">
+            <div class="contrib-head">
+              <div class="contrib-title">Contribuições</div>
+              <div class="contrib-num">1.284 no último ano</div>
+            </div>
+            <div class="contrib-grid" id="contrib-light"></div>
+          </div>
+          <div class="sec-title">
+            <div class="h">Repositórios fixados</div>
+            <div class="link">Ver todos</div>
+          </div>
+          <div class="pinned-list" style="padding-bottom: 16px;">
+            <div class="pinned-card">
+              <div class="pinned-head">
+                <i class="ti ti-pin-filled pin"></i>
+                <span class="pname">dev.lucas/octolens</span>
+              </div>
+              <div class="pinned-desc">Cliente mobile open-source para a API do GitHub. React Native + Expo.</div>
+              <div class="pinned-foot">
+                <span><span class="lang-dot" style="background:#3178c6"></span>TypeScript</span>
+                <span><i class="ti ti-star"></i>142</span>
+                <span><i class="ti ti-git-fork"></i>12</span>
+              </div>
+            </div>
+            <div class="pinned-card">
+              <div class="pinned-head">
+                <i class="ti ti-pin-filled pin"></i>
+                <span class="pname">dev.lucas/rn-bottom-sheet</span>
+              </div>
+              <div class="pinned-desc">Bottom sheet com gestos performáticos para React Native.</div>
+              <div class="pinned-foot">
+                <span><span class="lang-dot" style="background:#f1e05a"></span>JavaScript</span>
+                <span><i class="ti ti-star"></i>89</span>
+                <span><i class="ti ti-git-fork"></i>7</span>
+              </div>
+            </div>
+          </div>
+          <div class="bottom-nav">
+            <div class="bnav-item"><i class="ti ti-compass"></i>Explore</div>
+            <div class="bnav-item"><i class="ti ti-bookmark"></i>Saved</div>
+            <div class="bnav-item"><i class="ti ti-activity"></i>Feed</div>
+            <div class="bnav-item active"><i class="ti ti-user-filled"></i>Me</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="theme-cap dark"><span class="dot"></span> Dark</div>
+      <div class="frame dark">
+        <div class="screen dark">
+          <div class="statusbar"><span>9:41</span><span class="right"><i class="ti ti-signal-4g"></i><i class="ti ti-wifi"></i><i class="ti ti-battery-3"></i></span></div>
+          <div class="appbar">
+            <h1>Meu perfil</h1>
+            <div class="spacer"></div>
+            <div class="icon-btn"><i class="ti ti-settings"></i></div>
+          </div>
+          <div class="profile-hero">
+            <div style="display:flex; align-items:center; gap:14px;">
+              <div class="avatar-xl gradC"></div>
+              <div style="flex:1;">
+                <div class="profile-name">Lucas Andrade</div>
+                <div class="profile-handle">@dev.lucas</div>
+              </div>
+              <div class="btn outline" style="padding:8px 14px;">Editar</div>
+            </div>
+            <div class="profile-bio">Frontend engineer · construindo apps mobile em React Native. Curador de coleções de repos.</div>
+            <div class="profile-meta">
+              <span><i class="ti ti-map-pin"></i>São Paulo, BR</span>
+              <span><i class="ti ti-link"></i>lucas.dev</span>
+            </div>
+            <div class="profile-meta">
+              <span><b>284</b> seguidores</span>
+              <span><b>132</b> seguindo</span>
+              <span><b>47</b> repos</span>
+            </div>
+          </div>
+          <div class="contrib-card">
+            <div class="contrib-head">
+              <div class="contrib-title">Contribuições</div>
+              <div class="contrib-num">1.284 no último ano</div>
+            </div>
+            <div class="contrib-grid" id="contrib-dark"></div>
+          </div>
+          <div class="sec-title">
+            <div class="h">Repositórios fixados</div>
+            <div class="link">Ver todos</div>
+          </div>
+          <div class="pinned-list" style="padding-bottom: 16px;">
+            <div class="pinned-card">
+              <div class="pinned-head">
+                <i class="ti ti-pin-filled pin"></i>
+                <span class="pname">dev.lucas/octolens</span>
+              </div>
+              <div class="pinned-desc">Cliente mobile open-source para a API do GitHub. React Native + Expo.</div>
+              <div class="pinned-foot">
+                <span><span class="lang-dot" style="background:#3178c6"></span>TypeScript</span>
+                <span><i class="ti ti-star"></i>142</span>
+                <span><i class="ti ti-git-fork"></i>12</span>
+              </div>
+            </div>
+            <div class="pinned-card">
+              <div class="pinned-head">
+                <i class="ti ti-pin-filled pin"></i>
+                <span class="pname">dev.lucas/rn-bottom-sheet</span>
+              </div>
+              <div class="pinned-desc">Bottom sheet com gestos performáticos para React Native.</div>
+              <div class="pinned-foot">
+                <span><span class="lang-dot" style="background:#f1e05a"></span>JavaScript</span>
+                <span><i class="ti ti-star"></i>89</span>
+                <span><i class="ti ti-git-fork"></i>7</span>
+              </div>
+            </div>
+          </div>
+          <div class="bottom-nav">
+            <div class="bnav-item"><i class="ti ti-compass"></i>Explore</div>
+            <div class="bnav-item"><i class="ti ti-bookmark"></i>Saved</div>
+            <div class="bnav-item"><i class="ti ti-activity"></i>Feed</div>
+            <div class="bnav-item active"><i class="ti ti-user-filled"></i>Me</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ========== TELA 5: DETALHE ========== -->
+  <div class="screen-heading">
+    <div class="num">05</div>
+    <div class="title">Detalhes do repositório <span style="font-family:'Geist Mono', monospace; font-size:12px; color:#87837a; font-weight:400; margin-left:6px;">stack</span></div>
+    <div class="slug">RepoDetailScreen.tsx</div>
+  </div>
+  <div class="pair">
+
+    <div>
+      <div class="theme-cap"><span class="dot"></span> Light</div>
+      <div class="frame light">
+        <div class="screen light">
+          <div class="statusbar"><span>9:41</span><span class="right"><i class="ti ti-signal-4g"></i><i class="ti ti-wifi"></i><i class="ti ti-battery-3"></i></span></div>
+          <div class="appbar">
+            <div class="back"><i class="ti ti-arrow-left"></i></div>
+            <h1>Repositório</h1>
+            <div class="spacer"></div>
+            <div class="icon-btn"><i class="ti ti-share-2"></i></div>
+            <div class="icon-btn"><i class="ti ti-bookmark"></i></div>
+          </div>
+          <div class="detail-hero">
+            <div class="owner-row">
+              <div class="avatar-md gradB"></div>
+              <div>
+                <div class="owner-name">@facebook · Organization</div>
+              </div>
+            </div>
+            <div class="repo-title">react-native</div>
+            <div class="detail-desc">A framework for building native apps using React. Cross-platform development for iOS, Android, and web.</div>
+            <div class="topics">
+              <span class="topic">react</span>
+              <span class="topic">mobile</span>
+              <span class="topic">ios</span>
+              <span class="topic">android</span>
+              <span class="topic">cross-platform</span>
+            </div>
+          </div>
+          <div class="stats-row">
+            <div class="stat">
+              <div class="stat-label">Estrelas</div>
+              <div class="stat-num">120k</div>
+              <div class="stat-sub">↑ 312 hoje</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">Forks</div>
+              <div class="stat-num">24k</div>
+              <div class="stat-sub">↑ 18 hoje</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">Watch</div>
+              <div class="stat-num">2,5k</div>
+              <div class="stat-sub">↑ 4 hoje</div>
+            </div>
+          </div>
+          <div class="info-row">
+            <div class="lhs"><i class="ti ti-code"></i><b>Linguagem</b></div>
+            <div class="rhs"><span class="lang-dot" style="background:#3178c6; display:inline-block; margin-right:6px; vertical-align:middle;"></span>TypeScript</div>
+          </div>
+          <div class="info-row">
+            <div class="lhs"><i class="ti ti-license"></i><b>Licença</b></div>
+            <div class="rhs">MIT</div>
+          </div>
+          <div class="info-row">
+            <div class="lhs"><i class="ti ti-git-commit"></i><b>Último commit</b></div>
+            <div class="rhs">há 2 horas</div>
+          </div>
+          <div class="btn-primary"><i class="ti ti-circle-dot"></i> Ver 142 issues abertas</div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="theme-cap dark"><span class="dot"></span> Dark</div>
+      <div class="frame dark">
+        <div class="screen dark">
+          <div class="statusbar"><span>9:41</span><span class="right"><i class="ti ti-signal-4g"></i><i class="ti ti-wifi"></i><i class="ti ti-battery-3"></i></span></div>
+          <div class="appbar">
+            <div class="back"><i class="ti ti-arrow-left"></i></div>
+            <h1>Repositório</h1>
+            <div class="spacer"></div>
+            <div class="icon-btn"><i class="ti ti-share-2"></i></div>
+            <div class="icon-btn"><i class="ti ti-bookmark"></i></div>
+          </div>
+          <div class="detail-hero">
+            <div class="owner-row">
+              <div class="avatar-md gradB"></div>
+              <div>
+                <div class="owner-name">@facebook · Organization</div>
+              </div>
+            </div>
+            <div class="repo-title">react-native</div>
+            <div class="detail-desc">A framework for building native apps using React. Cross-platform development for iOS, Android, and web.</div>
+            <div class="topics">
+              <span class="topic">react</span>
+              <span class="topic">mobile</span>
+              <span class="topic">ios</span>
+              <span class="topic">android</span>
+              <span class="topic">cross-platform</span>
+            </div>
+          </div>
+          <div class="stats-row">
+            <div class="stat">
+              <div class="stat-label">Estrelas</div>
+              <div class="stat-num">120k</div>
+              <div class="stat-sub">↑ 312 hoje</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">Forks</div>
+              <div class="stat-num">24k</div>
+              <div class="stat-sub">↑ 18 hoje</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">Watch</div>
+              <div class="stat-num">2,5k</div>
+              <div class="stat-sub">↑ 4 hoje</div>
+            </div>
+          </div>
+          <div class="info-row">
+            <div class="lhs"><i class="ti ti-code"></i><b>Linguagem</b></div>
+            <div class="rhs"><span class="lang-dot" style="background:#3178c6; display:inline-block; margin-right:6px; vertical-align:middle;"></span>TypeScript</div>
+          </div>
+          <div class="info-row">
+            <div class="lhs"><i class="ti ti-license"></i><b>Licença</b></div>
+            <div class="rhs">MIT</div>
+          </div>
+          <div class="info-row">
+            <div class="lhs"><i class="ti ti-git-commit"></i><b>Último commit</b></div>
+            <div class="rhs">há 2 horas</div>
+          </div>
+          <div class="btn-primary"><i class="ti ti-circle-dot"></i> Ver 142 issues abertas</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ========== TELA 6: ISSUES ========== -->
+  <div class="screen-heading">
+    <div class="num">06</div>
+    <div class="title">Issues do repositório <span style="font-family:'Geist Mono', monospace; font-size:12px; color:#87837a; font-weight:400; margin-left:6px;">stack</span></div>
+    <div class="slug">IssuesScreen.tsx</div>
+  </div>
+  <div class="pair">
+
+    <div>
+      <div class="theme-cap"><span class="dot"></span> Light</div>
+      <div class="frame light">
+        <div class="screen light">
+          <div class="statusbar"><span>9:41</span><span class="right"><i class="ti ti-signal-4g"></i><i class="ti ti-wifi"></i><i class="ti ti-battery-3"></i></span></div>
+          <div class="appbar">
+            <div class="back"><i class="ti ti-arrow-left"></i></div>
+            <h1>Issues</h1>
+            <div class="spacer"></div>
+            <div class="icon-btn"><i class="ti ti-filter"></i></div>
+          </div>
+          <div class="issue-count">
+            <div class="big">142</div>
+            <span class="dot"></span>
+            <div class="lbl">Abertas · facebook/react-native</div>
+          </div>
+          <div class="chips">
+            <div class="chip active">Abertas · 142</div>
+            <div class="chip">Fechadas · 8.9k</div>
+            <div class="chip">Atribuídas a mim</div>
+            <div class="chip">Boa primeira</div>
+          </div>
+          <div class="issue-list">
+            <div class="issue-card">
+              <div class="issue-icon"><i class="ti ti-circle-dot"></i></div>
+              <div style="flex:1;">
+                <div class="issue-title">Crash on Android 14 when using FlatList with sticky headers</div>
+                <div class="issue-labels">
+                  <span class="lbl bug">bug</span>
+                  <span class="lbl enh">android</span>
+                  <span class="lbl warn">priority: high</span>
+                </div>
+                <div class="issue-meta">
+                  <span>#41234</span>
+                  <span class="sep">·</span>
+                  <span>há 3 dias</span>
+                  <span class="sep">·</span>
+                  <span class="handle">@jamie-dev</span>
+                  <span class="sep">·</span>
+                  <span><i class="ti ti-message-circle" style="font-size:11px; vertical-align:-1px;"></i> 12</span>
+                </div>
+              </div>
+            </div>
+            <div class="issue-card">
+              <div class="issue-icon"><i class="ti ti-circle-dot"></i></div>
+              <div style="flex:1;">
+                <div class="issue-title">Add support for hairline width on web targets</div>
+                <div class="issue-labels">
+                  <span class="lbl enh">enhancement</span>
+                </div>
+                <div class="issue-meta">
+                  <span>#41201</span>
+                  <span class="sep">·</span>
+                  <span>há 1 semana</span>
+                  <span class="sep">·</span>
+                  <span class="handle">@sara.k</span>
+                  <span class="sep">·</span>
+                  <span><i class="ti ti-message-circle" style="font-size:11px; vertical-align:-1px;"></i> 4</span>
+                </div>
+              </div>
+            </div>
+            <div class="issue-card">
+              <div class="issue-icon"><i class="ti ti-circle-dot"></i></div>
+              <div style="flex:1;">
+                <div class="issue-title">Docs: clarify behavior of useColorScheme on iOS 17</div>
+                <div class="issue-labels">
+                  <span class="lbl docs">docs</span>
+                  <span class="lbl enh">good first issue</span>
+                </div>
+                <div class="issue-meta">
+                  <span>#41178</span>
+                  <span class="sep">·</span>
+                  <span>há 2 semanas</span>
+                  <span class="sep">·</span>
+                  <span class="handle">@marco</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="loader-row"><span class="pulse"></span> Carregando próxima página…</div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="theme-cap dark"><span class="dot"></span> Dark</div>
+      <div class="frame dark">
+        <div class="screen dark">
+          <div class="statusbar"><span>9:41</span><span class="right"><i class="ti ti-signal-4g"></i><i class="ti ti-wifi"></i><i class="ti ti-battery-3"></i></span></div>
+          <div class="appbar">
+            <div class="back"><i class="ti ti-arrow-left"></i></div>
+            <h1>Issues</h1>
+            <div class="spacer"></div>
+            <div class="icon-btn"><i class="ti ti-filter"></i></div>
+          </div>
+          <div class="issue-count">
+            <div class="big">142</div>
+            <span class="dot"></span>
+            <div class="lbl">Abertas · facebook/react-native</div>
+          </div>
+          <div class="chips">
+            <div class="chip active">Abertas · 142</div>
+            <div class="chip">Fechadas · 8.9k</div>
+            <div class="chip">Atribuídas a mim</div>
+            <div class="chip">Boa primeira</div>
+          </div>
+          <div class="issue-list">
+            <div class="issue-card">
+              <div class="issue-icon"><i class="ti ti-circle-dot"></i></div>
+              <div style="flex:1;">
+                <div class="issue-title">Crash on Android 14 when using FlatList with sticky headers</div>
+                <div class="issue-labels">
+                  <span class="lbl bug">bug</span>
+                  <span class="lbl enh">android</span>
+                  <span class="lbl warn">priority: high</span>
+                </div>
+                <div class="issue-meta">
+                  <span>#41234</span>
+                  <span class="sep">·</span>
+                  <span>há 3 dias</span>
+                  <span class="sep">·</span>
+                  <span class="handle">@jamie-dev</span>
+                  <span class="sep">·</span>
+                  <span><i class="ti ti-message-circle" style="font-size:11px; vertical-align:-1px;"></i> 12</span>
+                </div>
+              </div>
+            </div>
+            <div class="issue-card">
+              <div class="issue-icon"><i class="ti ti-circle-dot"></i></div>
+              <div style="flex:1;">
+                <div class="issue-title">Add support for hairline width on web targets</div>
+                <div class="issue-labels">
+                  <span class="lbl enh">enhancement</span>
+                </div>
+                <div class="issue-meta">
+                  <span>#41201</span>
+                  <span class="sep">·</span>
+                  <span>há 1 semana</span>
+                  <span class="sep">·</span>
+                  <span class="handle">@sara.k</span>
+                  <span class="sep">·</span>
+                  <span><i class="ti ti-message-circle" style="font-size:11px; vertical-align:-1px;"></i> 4</span>
+                </div>
+              </div>
+            </div>
+            <div class="issue-card">
+              <div class="issue-icon"><i class="ti ti-circle-dot"></i></div>
+              <div style="flex:1;">
+                <div class="issue-title">Docs: clarify behavior of useColorScheme on iOS 17</div>
+                <div class="issue-labels">
+                  <span class="lbl docs">docs</span>
+                  <span class="lbl enh">good first issue</span>
+                </div>
+                <div class="issue-meta">
+                  <span>#41178</span>
+                  <span class="sep">·</span>
+                  <span>há 2 semanas</span>
+                  <span class="sep">·</span>
+                  <span class="handle">@marco</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="loader-row"><span class="pulse"></span> Carregando próxima página…</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ========== TELA 7: SHOWCASE ========== -->
+  <div class="screen-heading">
+    <div class="num">07</div>
+    <div class="title">Design System · componentes</div>
+    <div class="slug">DesignSystemScreen.tsx</div>
+  </div>
+  <div class="pair">
+
+    <div>
+      <div class="theme-cap"><span class="dot"></span> Light</div>
+      <div class="frame light">
+        <div class="screen light">
+          <div class="statusbar"><span>9:41</span><span class="right"><i class="ti ti-signal-4g"></i><i class="ti ti-wifi"></i><i class="ti ti-battery-3"></i></span></div>
+          <div class="appbar">
+            <h1>Sistema</h1>
+            <div class="spacer"></div>
+            <div class="icon-btn"><i class="ti ti-sun"></i></div>
+          </div>
+          <div class="show-grid">
+
+            <div class="show-block">
+              <div class="show-h">Buttons</div>
+              <div class="row">
+                <div class="btn primary">Primary</div>
+                <div class="btn accent">Accent</div>
+                <div class="btn outline">Outline</div>
+                <div class="btn ghost">Ghost</div>
+              </div>
+              <div class="row" style="margin-top:8px;">
+                <div class="btn primary" style="padding:6px 10px; font-size:11px;">sm</div>
+                <div class="btn primary">md</div>
+                <div class="btn primary" style="padding:11px 16px; font-size:14px;">lg</div>
+                <div class="btn outline disabled">disabled</div>
+                <div class="btn outline"><i class="ti ti-loader-2"></i>loading</div>
+              </div>
+            </div>
+
+            <div class="show-block">
+              <div class="show-h">Input</div>
+              <input class="field" value="dev@octolens.app" readonly />
+              <div class="helper muted">Seu email para login</div>
+              <input class="field error" value="invalid-email" readonly style="margin-top:10px;" />
+              <div class="helper err">Email inválido — verifique o formato</div>
+            </div>
+
+            <div class="show-block">
+              <div class="show-h">Badges</div>
+              <div class="row">
+                <span class="lbl bug">danger</span>
+                <span class="lbl warn">warning</span>
+                <span class="lbl enh">info</span>
+                <span class="lbl docs">success</span>
+              </div>
+            </div>
+
+            <div class="show-block">
+              <div class="show-h">Card · Avatar</div>
+              <div class="surface-card">
+                <div class="avatar-md gradB"></div>
+                <div class="meta-block">
+                  <div class="name">facebook</div>
+                  <div class="sub">Organization · 2.1k repos</div>
+                </div>
+                <div class="btn outline" style="padding:6px 10px; font-size:11px;">Seguir</div>
+              </div>
+            </div>
+
+            <div class="show-block">
+              <div class="show-h">Colors</div>
+              <div class="swatch-row">
+                <div class="swatch" style="background:#1a1a1f;">fg</div>
+                <div class="swatch" style="background:#5b5a55;">fg2</div>
+                <div class="swatch" style="background:oklch(0.55 0.18 275);">accent</div>
+                <div class="swatch" style="background:oklch(0.55 0.14 150);">ok</div>
+                <div class="swatch" style="background:oklch(0.6  0.16 60);">warn</div>
+                <div class="swatch" style="background:oklch(0.55 0.18 25);">err</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="theme-cap dark"><span class="dot"></span> Dark</div>
+      <div class="frame dark">
+        <div class="screen dark">
+          <div class="statusbar"><span>9:41</span><span class="right"><i class="ti ti-signal-4g"></i><i class="ti ti-wifi"></i><i class="ti ti-battery-3"></i></span></div>
+          <div class="appbar">
+            <h1>Sistema</h1>
+            <div class="spacer"></div>
+            <div class="icon-btn"><i class="ti ti-moon"></i></div>
+          </div>
+          <div class="show-grid">
+
+            <div class="show-block">
+              <div class="show-h">Buttons</div>
+              <div class="row">
+                <div class="btn primary">Primary</div>
+                <div class="btn accent">Accent</div>
+                <div class="btn outline">Outline</div>
+                <div class="btn ghost">Ghost</div>
+              </div>
+              <div class="row" style="margin-top:8px;">
+                <div class="btn primary" style="padding:6px 10px; font-size:11px;">sm</div>
+                <div class="btn primary">md</div>
+                <div class="btn primary" style="padding:11px 16px; font-size:14px;">lg</div>
+                <div class="btn outline disabled">disabled</div>
+                <div class="btn outline"><i class="ti ti-loader-2"></i>loading</div>
+              </div>
+            </div>
+
+            <div class="show-block">
+              <div class="show-h">Input</div>
+              <input class="field" value="dev@octolens.app" readonly />
+              <div class="helper muted">Seu email para login</div>
+              <input class="field error" value="invalid-email" readonly style="margin-top:10px;" />
+              <div class="helper err">Email inválido — verifique o formato</div>
+            </div>
+
+            <div class="show-block">
+              <div class="show-h">Badges</div>
+              <div class="row">
+                <span class="lbl bug">danger</span>
+                <span class="lbl warn">warning</span>
+                <span class="lbl enh">info</span>
+                <span class="lbl docs">success</span>
+              </div>
+            </div>
+
+            <div class="show-block">
+              <div class="show-h">Card · Avatar</div>
+              <div class="surface-card">
+                <div class="avatar-md gradB"></div>
+                <div class="meta-block">
+                  <div class="name">facebook</div>
+                  <div class="sub">Organization · 2.1k repos</div>
+                </div>
+                <div class="btn outline" style="padding:6px 10px; font-size:11px;">Seguir</div>
+              </div>
+            </div>
+
+            <div class="show-block">
+              <div class="show-h">Colors</div>
+              <div class="swatch-row">
+                <div class="swatch" style="background:#f0eee8; color:#1a1a1f;">fg</div>
+                <div class="swatch" style="background:#a4a299; color:#1a1a1f;">fg2</div>
+                <div class="swatch" style="background:oklch(0.72 0.16 275);">accent</div>
+                <div class="swatch" style="background:oklch(0.72 0.16 150);">ok</div>
+                <div class="swatch" style="background:oklch(0.78 0.16 70); color:#1a1a1f;">warn</div>
+                <div class="swatch" style="background:oklch(0.7 0.18 25);">err</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="doc-foot">
+    Octolens · cliente conceitual da API pública do GitHub · design original.<br/>
+    Tab screens (com bottom nav): Explore · Saved · Feed · Profile · Stack screens (sem bottom nav, push navigation): Repo Detail · Issues · Design System.<br/>
+    7 telas × 2 temas = 14 mockups. Dots de linguagem, ícone de circle-dot para issues e estrutura owner/repo são convenções funcionais — paleta, tipografia, layout e marca são próprios.
+  </div>
+
+</div>
+<script>
+  // Render contribution grid (20 cols × 7 rows = 140 cells)
+  (function () {
+    const lightCells = [
+      'oklch(0.94 0.01 80)',  // 0
+      'oklch(0.88 0.08 275)', // 1
+      'oklch(0.72 0.14 275)', // 2
+      'oklch(0.55 0.18 275)', // 3
+      'oklch(0.42 0.2 275)'   // 4
+    ];
+    const darkCells = [
+      'oklch(0.22 0.01 275)',
+      'oklch(0.32 0.08 275)',
+      'oklch(0.5 0.14 275)',
+      'oklch(0.68 0.16 275)',
+      'oklch(0.82 0.18 275)'
+    ];
+    // Pseudo-random pattern (deterministic seed)
+    const pattern = [];
+    let s = 7;
+    for (let i = 0; i < 140; i++) {
+      s = (s * 9301 + 49297) % 233280;
+      const r = s / 233280;
+      let v;
+      if (r < 0.45) v = 0;
+      else if (r < 0.7) v = 1;
+      else if (r < 0.88) v = 2;
+      else if (r < 0.97) v = 3;
+      else v = 4;
+      pattern.push(v);
+    }
+    function fill(id, colors) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      pattern.forEach(v => {
+        const c = document.createElement('div');
+        c.className = 'contrib-cell';
+        c.style.setProperty('--cell-bg', colors[v]);
+        el.appendChild(c);
+      });
+    }
+    fill('contrib-light', lightCells);
+    fill('contrib-dark', darkCells);
+  })();
+</script>
+</body>
+</html>
