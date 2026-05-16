@@ -10,6 +10,7 @@ import { Box } from '@/presentation/design-system/primitives/Box';
 import { Spinner } from '@/presentation/design-system/primitives/Spinner';
 import { Text } from '@/presentation/design-system/primitives/Text';
 import { useIssues } from '@/presentation/hooks/useIssues';
+import { useOpenIssuesCount } from '@/presentation/hooks/useOpenIssuesCount';
 import type { ExploreStackScreenProps } from '@/presentation/navigation/types';
 import { getErrorMessage } from '@/presentation/utils/getErrorMessage';
 
@@ -29,9 +30,12 @@ export function IssuesScreen({ route }: Props) {
     refetch,
     error,
   } = useIssues({ owner, repo, state: 'open' });
+  const { data: totalCount } = useOpenIssuesCount({ owner, repo });
 
   const issues: Issue[] = data?.pages.flatMap((p) => p.items) ?? [];
-  const totalCount = data?.pages[0]?.totalCount ?? 0;
+  const loadedCount = issues.length;
+  const headerCount = totalCount ?? loadedCount;
+  const headerHasMore = totalCount === undefined && hasNextPage;
 
   const renderItem: ListRenderItem<Issue> = useCallback(
     ({ item }) => <IssueListItem issue={item} />,
@@ -78,8 +82,9 @@ export function IssuesScreen({ route }: Props) {
     <Box flex={1} backgroundColor="bg">
       <Box paddingHorizontal="xxxl" paddingTop="md" paddingBottom="md">
         <Text variant="caption">
-          {totalCount.toLocaleString('pt-BR')} issue{totalCount === 1 ? '' : 's'} aberta
-          {totalCount === 1 ? '' : 's'}
+          {headerCount.toLocaleString('pt-BR')}
+          {headerHasMore ? '+' : ''} issue{headerCount === 1 ? '' : 's'} aberta
+          {headerCount === 1 ? '' : 's'}
         </Text>
       </Box>
       <FlatList

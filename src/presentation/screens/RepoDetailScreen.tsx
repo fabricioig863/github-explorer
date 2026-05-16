@@ -13,6 +13,7 @@ import { Box } from '@/presentation/design-system/primitives/Box';
 import { LanguageDot } from '@/presentation/design-system/primitives/LanguageDot';
 import { Spinner } from '@/presentation/design-system/primitives/Spinner';
 import { Text } from '@/presentation/design-system/primitives/Text';
+import { useOpenIssuesCount } from '@/presentation/hooks/useOpenIssuesCount';
 import { useRepoDetails } from '@/presentation/hooks/useRepoDetails';
 import type { ExploreStackScreenProps } from '@/presentation/navigation/types';
 import { getErrorMessage } from '@/presentation/utils/getErrorMessage';
@@ -22,6 +23,7 @@ type Props = ExploreStackScreenProps<'RepoDetail'>;
 export function RepoDetailScreen({ route, navigation }: Props) {
   const { owner, repo } = route.params;
   const { data, isLoading, error } = useRepoDetails({ owner, repo });
+  const { data: openIssuesCount } = useOpenIssuesCount({ owner, repo });
 
   if (isLoading) {
     return (
@@ -52,13 +54,15 @@ export function RepoDetailScreen({ route, navigation }: Props) {
       <Box flex={1} backgroundColor="bg" padding="xxxl" gap="xxxl">
         <RepoHero repo={data} />
         <StatsGrid repo={data} />
-        <RepoMeta repo={data} />
+        <RepoMeta repo={data} openIssuesCount={openIssuesCount} />
         <Button
           variant="primary"
           size="md"
           onPress={() => navigation.navigate('Issues', { owner, repo })}
         >
-          Ver {data.openIssuesCount} issues abertas
+          {openIssuesCount === undefined
+            ? 'Ver issues abertas'
+            : `Ver ${openIssuesCount} issue${openIssuesCount === 1 ? '' : 's'} aberta${openIssuesCount === 1 ? '' : 's'}`}
         </Button>
       </Box>
     </ScrollView>
@@ -133,7 +137,11 @@ function StatCard({ icon, label, value }: StatCardProps) {
   );
 }
 
-function RepoMeta({ repo }: RepoSectionProps) {
+interface RepoMetaProps extends RepoSectionProps {
+  openIssuesCount: number | undefined;
+}
+
+function RepoMeta({ repo, openIssuesCount }: RepoMetaProps) {
   const theme = useTheme<Theme>();
   return (
     <Card variant="surface">
@@ -151,7 +159,7 @@ function RepoMeta({ repo }: RepoSectionProps) {
           </Text>
           <Box flexDirection="row" alignItems="center" gap="xs">
             <CircleDot size={14} color={theme.colors.success} />
-            <Text variant="mono">{repo.openIssuesCount}</Text>
+            <Text variant="mono">{openIssuesCount ?? '—'}</Text>
           </Box>
         </Box>
       </Box>

@@ -1,5 +1,9 @@
 import type { Issue } from '@/domain/entities/Issue';
-import type { IIssueRepository, ListIssuesParams } from '@/domain/repositories/IIssueRepository';
+import type {
+  CountOpenIssuesParams,
+  IIssueRepository,
+  ListIssuesParams,
+} from '@/domain/repositories/IIssueRepository';
 import type { PaginatedResult } from '@/domain/repositories/Pagination';
 import { ISSUES_FIXTURE } from '@/infrastructure/repositories/fixtures/issues.fixture';
 
@@ -34,5 +38,10 @@ export class InMemoryIssueRepository implements IIssueRepository {
       totalCount: filtered.length,
       hasNextPage: end < filtered.length,
     };
+  }
+
+  async countOpen(_params: CountOpenIssuesParams): Promise<number> {
+    await delay(randomLatency());
+    return ISSUES_FIXTURE.filter((issue) => issue.state === 'open').length;
   }
 }
