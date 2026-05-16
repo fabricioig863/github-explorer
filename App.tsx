@@ -1,20 +1,37 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { useEffect } from 'react';
+
+import { QueryProvider } from '@/infrastructure/query/QueryProvider';
+import { AppThemeProvider } from '@/infrastructure/theme/AppThemeProvider';
+import { useAppFonts } from '@/infrastructure/theme/fonts';
+import { RootNavigator } from '@/presentation/navigation/RootNavigator';
+
+// dentro de App, fora do return:
+
+void SplashScreen.preventAutoHideAsync();
 
 export default function App() {
+  const [fontsLoaded, fontsError] = useAppFonts();
+
+  useEffect(() => {
+    if (fontsLoaded || fontsError !== null) {
+      void SplashScreen.hideAsync();
+    }
+    void AsyncStorage.removeItem('@github-explorer:theme-mode');
+  }, [fontsLoaded, fontsError]);
+
+  if (!fontsLoaded && fontsError === null) {
+    return null;
+  }
+
   return (
-    <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <QueryProvider>
+      <AppThemeProvider>
+        <RootNavigator />
+        <StatusBar style="auto" />
+      </AppThemeProvider>
+    </QueryProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
