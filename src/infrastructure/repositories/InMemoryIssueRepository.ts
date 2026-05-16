@@ -1,0 +1,38 @@
+import type { Issue } from '@/domain/entities/Issue';
+import type { IIssueRepository, ListIssuesParams } from '@/domain/repositories/IIssueRepository';
+import type { PaginatedResult } from '@/domain/repositories/Pagination';
+import { ISSUES_FIXTURE } from '@/infrastructure/repositories/fixtures/issues.fixture';
+
+const MIN_LATENCY_MS = 300;
+const MAX_LATENCY_MS = 500;
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function randomLatency(): number {
+  return Math.floor(MIN_LATENCY_MS + Math.random() * (MAX_LATENCY_MS - MIN_LATENCY_MS));
+}
+
+// Simplificação do mock: filtro por `owner`/`repo` é ignorado. Todas as
+// issues do fixture são retornadas independentemente do repositório
+// solicitado. A implementação HTTP real respeitará ambos os parâmetros.
+export class InMemoryIssueRepository implements IIssueRepository {
+  async list(params: ListIssuesParams): Promise<PaginatedResult<Issue>> {
+    await delay(randomLatency());
+
+    const { state, page, perPage } = params;
+
+    const filtered = ISSUES_FIXTURE.filter((issue) => issue.state === state);
+
+    const start = (page - 1) * perPage;
+    const end = start + perPage;
+    const items = filtered.slice(start, end);
+
+    return {
+      items,
+      totalCount: filtered.length,
+      hasNextPage: end < filtered.length,
+    };
+  }
+}
