@@ -1,0 +1,172 @@
+import { createTheme } from '@shopify/restyle';
+
+import { palette } from '@/infrastructure/theme/tokens/palette';
+
+export const lightTheme = createTheme({
+  colors: {
+    bg: palette.warmWhite,
+    surface: palette.white,
+    surfaceMuted: palette.warmGray50,
+    border: palette.warmGray200,
+    borderStrong: palette.warmGray300,
+    fg: palette.warmGray900,
+    fgMuted: palette.warmGray700,
+    fgSubtle: palette.warmGray500,
+    accent: palette.accentLight,
+    accentSoft: palette.accentSoftLight,
+    accentText: palette.pureWhite,
+    success: palette.successLight,
+    warning: palette.warningLight,
+    danger: palette.dangerLight,
+    dangerBg: palette.dangerBgLight,
+    transparent: palette.transparent,
+  },
+  spacing: {
+    none: 0,
+    xs: 4,
+    sm: 6,
+    md: 8,
+    lg: 10,
+    xl: 12,
+    xxl: 14,
+    xxxl: 16,
+    huge: 20,
+    mega: 24,
+    giga: 32,
+  },
+  borderRadii: {
+    none: 0,
+    sm: 6,
+    md: 10,
+    lg: 12,
+    xl: 14,
+    xxl: 16,
+    xxxl: 20,
+    pill: 999,
+  },
+  textVariants: {
+    display: {
+      fontFamily: 'Geist_600SemiBold',
+      fontSize: 32,
+      lineHeight: 38,
+      color: 'fg',
+    },
+    h1: {
+      fontFamily: 'Geist_600SemiBold',
+      fontSize: 22,
+      lineHeight: 28,
+      color: 'fg',
+    },
+    h2: {
+      fontFamily: 'Geist_600SemiBold',
+      fontSize: 18,
+      lineHeight: 24,
+      color: 'fg',
+    },
+    h3: {
+      fontFamily: 'Geist_500Medium',
+      fontSize: 15,
+      lineHeight: 22,
+      color: 'fg',
+    },
+    body: {
+      fontFamily: 'Geist_400Regular',
+      fontSize: 14,
+      lineHeight: 21,
+      color: 'fg',
+    },
+    bodySmall: {
+      fontFamily: 'Geist_400Regular',
+      fontSize: 13,
+      lineHeight: 19,
+      color: 'fgMuted',
+    },
+    caption: {
+      fontFamily: 'GeistMono_400Regular',
+      fontSize: 11,
+      lineHeight: 14,
+      color: 'fgSubtle',
+    },
+    mono: {
+      fontFamily: 'GeistMono_400Regular',
+      fontSize: 12,
+      lineHeight: 16,
+      color: 'fgMuted',
+    },
+    monoStrong: {
+      fontFamily: 'GeistMono_500Medium',
+      fontSize: 12,
+      lineHeight: 16,
+      color: 'fg',
+    },
+    eyebrow: {
+      fontFamily: 'GeistMono_500Medium',
+      fontSize: 10,
+      lineHeight: 14,
+      letterSpacing: 1.8,
+      color: 'fgSubtle',
+    },
+    defaults: {
+      fontFamily: 'Geist_400Regular',
+      fontSize: 14,
+      lineHeight: 21,
+      color: 'fg',
+    },
+  },
+  buttonVariants: {
+    primary: {
+      backgroundColor: 'fg',
+      paddingHorizontal: 'xxl',
+      paddingVertical: 'lg',
+      borderRadius: 'md',
+    },
+    accent: {
+      backgroundColor: 'accent',
+      paddingHorizontal: 'xxl',
+      paddingVertical: 'lg',
+      borderRadius: 'md',
+    },
+    outline: {
+      backgroundColor: 'transparent',
+      borderWidth: 1,
+      borderColor: 'borderStrong',
+      paddingHorizontal: 'xxl',
+      paddingVertical: 'lg',
+      borderRadius: 'md',
+    },
+    ghost: {
+      backgroundColor: 'transparent',
+      paddingHorizontal: 'md',
+      paddingVertical: 'xs',
+    },
+    defaults: {
+      backgroundColor: 'fg',
+      paddingHorizontal: 'xxl',
+      paddingVertical: 'lg',
+      borderRadius: 'md',
+    },
+  },
+  cardVariants: {
+    surface: {
+      backgroundColor: 'surface',
+      borderColor: 'border',
+      borderWidth: 1,
+      borderRadius: 'xxl',
+      padding: 'xxl',
+    },
+    flat: {
+      backgroundColor: 'surfaceMuted',
+      borderRadius: 'xxl',
+      padding: 'xxl',
+    },
+    defaults: {
+      backgroundColor: 'surface',
+      borderColor: 'border',
+      borderWidth: 1,
+      borderRadius: 'xxl',
+      padding: 'xxl',
+    },
+  },
+});
+
+export type Theme = typeof lightTheme;
