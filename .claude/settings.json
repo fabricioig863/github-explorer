@@ -1,4 +1,35 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p /Users/fabricio/projects/github-explorer/docs)",
+      "Bash(git mv *)",
+      "Bash(pnpm typecheck *)",
+      "Bash(pnpm lint *)",
+      "Read(//Users/fabricio/.claude/**)",
+      "Bash(bash \"/Users/fabricio/.claude/plugins/cache/caveman/caveman/63a91ecadbf4/src/hooks/caveman-statusline.sh\" *)",
+      "Bash(node -e \"console.log\\(require\\('eslint-plugin-boundaries/package.json'\\).version\\)\")",
+      "Bash(grep -rB2 -A20 '\"boundaries/external\"' node_modules/eslint-plugin-boundaries/dist/)",
+      "Bash(echo \"exit=$?\")",
+      "Bash(echo \"lint_exit=$?\")",
+      "Bash(npx eslint *)",
+      "Bash(echo \"grep_exit=$?\")",
+      "Bash(command -v ts-node)",
+      "Bash(grep -E \"^\\(ts-node|tsx\\)$\")",
+      "Bash(npx -y --package=tsx --quiet -- tsx -e \"import\\('@/infrastructure/di/container'\\).then\\(async \\(m\\) => { const r = await m.container.searchReposUseCase.execute\\({ query: 'react', page: 1 }\\); console.log\\('Found', r.items.length, 'repos. Total:', r.totalCount\\); }\\).catch\\(e => { console.error\\(e\\); process.exit\\(1\\); }\\);\")",
+      "Bash(npx expo *)",
+      "Bash(pnpm add *)",
+      "Bash(echo \"===EXIT=$?===\")",
+      "Bash(mkdir -p /Users/fabricio/projects/github-explorer/src/presentation/design-system/primitives && ls /Users/fabricio/projects/github-explorer/src/presentation/design-system/)",
+      "Bash(grep -vE \"from 'react'$\")",
+      "Bash(grep -vE \"from 'react';?$\")",
+      "Bash(pnpm lint:fix)"
+    ],
+    "additionalDirectories": [
+      "/Users/fabricio/projects/github-explorer",
+      "/Users/fabricio/.claude",
+      "/Users/fabricio/projects/github-explorer/src/presentation/design-system"
+    ]
+  },
   "enabledPlugins": {
     "expo@claude-plugins-official": true
   }
