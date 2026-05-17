@@ -5,8 +5,10 @@ import { FlatList, RefreshControl, type ListRenderItem } from 'react-native';
 
 import type { Repository } from '@/domain/entities/Repository';
 import { EmptyState } from '@/presentation/components/EmptyState';
+import { RateLimitBanner } from '@/presentation/components/RateLimitBanner';
 import { RepoListItem } from '@/presentation/components/RepoListItem';
 import { Input } from '@/presentation/design-system/Input';
+import { Skeleton } from '@/presentation/design-system/Skeleton';
 import { Box } from '@/presentation/design-system/primitives/Box';
 import { Spinner } from '@/presentation/design-system/primitives/Spinner';
 import { Text } from '@/presentation/design-system/primitives/Text';
@@ -82,8 +84,10 @@ export function SearchScreen({ navigation }: Props) {
     return (
       <Box flex={1} backgroundColor="bg">
         <SearchHeader query={query} onChangeQuery={setQuery} />
-        <Box flex={1} alignItems="center" justifyContent="center">
-          <Spinner size="large" color="accent" />
+        <Box paddingHorizontal="xxxl" paddingTop="md" gap="lg">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} height={84} radius={12} />
+          ))}
         </Box>
       </Box>
     );
@@ -93,7 +97,14 @@ export function SearchScreen({ navigation }: Props) {
     return (
       <Box flex={1} backgroundColor="bg">
         <SearchHeader query={query} onChangeQuery={setQuery} />
-        <EmptyState title="Algo deu errado" description={getErrorMessage(error)} />
+        <RateLimitBanner error={error} />
+        <EmptyState
+          title="Algo deu errado"
+          description={getErrorMessage(error)}
+          onRetry={() => {
+            void refetch();
+          }}
+        />
       </Box>
     );
   }

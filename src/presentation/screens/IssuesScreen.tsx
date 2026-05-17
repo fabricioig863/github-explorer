@@ -5,6 +5,7 @@ import { FlatList, RefreshControl, type ListRenderItem } from 'react-native';
 import type { Issue } from '@/domain/entities/Issue';
 import { EmptyState } from '@/presentation/components/EmptyState';
 import { IssueListItem } from '@/presentation/components/IssueListItem';
+import { Skeleton } from '@/presentation/design-system/Skeleton';
 import { Box } from '@/presentation/design-system/primitives/Box';
 import { Spinner } from '@/presentation/design-system/primitives/Spinner';
 import { Text } from '@/presentation/design-system/primitives/Text';
@@ -54,8 +55,15 @@ export function IssuesScreen({ route }: Props) {
 
   if (isLoading) {
     return (
-      <Box flex={1} backgroundColor="bg" alignItems="center" justifyContent="center">
-        <Spinner size="large" color="accent" />
+      <Box flex={1} backgroundColor="bg">
+        <Box paddingHorizontal="xxxl" paddingTop="md" paddingBottom="md">
+          <Skeleton width={140} height={12} radius={4} />
+        </Box>
+        <Box paddingHorizontal="xxxl" gap="lg">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} height={96} radius={12} />
+          ))}
+        </Box>
       </Box>
     );
   }
