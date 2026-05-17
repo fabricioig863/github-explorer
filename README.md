@@ -1,21 +1,5 @@
 # GitHub Explorer
 
-## Demonstração
-
-<p align="center">
-  <a href="./mockups/demo.mov" title="Clique para baixar a gravação completa (.mov)">
-    <img src="./mockups/demo-preview.png" alt="Preview da demo do GitHub Explorer" width="320" />
-  </a>
-</p>
-
-> Clique no preview acima para baixar a gravação de tela completa
-> ([`mockups/demo.mov`](./mockups/demo.mov)). GitHub bloqueia a
-> reprodução inline de vídeos servidos a partir de arquivos do
-> próprio repositório (CSP), então o preview estático é o
-> compromisso mais portável.
-
----
-
 Aplicativo React Native (Expo SDK 54, RN 0.81, TypeScript strict) que
 consome a API pública do GitHub para explorar repositórios, suas issues
 abertas e o perfil do usuário configurado. Foi construído como exercício
