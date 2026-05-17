@@ -23,7 +23,6 @@ paginação infinita e tratamento tipado de erros.
 5. [Valor desse desenho no dia a dia](#5-valor-desse-desenho-no-dia-a-dia)
 6. [Como rodar](#6-como-rodar)
 7. [Scripts e thresholds](#7-scripts-e-thresholds)
-8. [O que faria diferente com mais tempo](#8-o-que-faria-diferente-com-mais-tempo)
 
 ---
 
