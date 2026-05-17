@@ -1,9 +1,6 @@
 import { lightTheme, type Theme } from 'src/infra/theme/lightTheme';
 import { palette } from 'src/infra/theme/tokens/palette';
 
-// darkTheme compartilha estrutura (spacing/radii/textVariants/buttonVariants)
-// com lightTheme — só troca o objeto colors.
-// Tipagem `: Theme` força equivalência estrutural — esquecer uma cor falha em compile.
 export const darkTheme: Theme = {
   ...lightTheme,
   colors: {

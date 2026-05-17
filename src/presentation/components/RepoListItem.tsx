@@ -15,10 +15,6 @@ interface RepoListItemProps {
   onPress: () => void;
 }
 
-/**
- * Card de repositório para listas — busca, favoritos (futuro), etc.
- * Exibe avatar do owner, nome, descrição, e metadados (stars, lang, forks).
- */
 export function RepoListItem({ repo, onPress }: RepoListItemProps) {
   const theme = useTheme<Theme>();
 

@@ -1,19 +1,11 @@
 import type { SavedRepo } from '@/domain/entities/SavedRepo';
 
-/**
- * Identidade estável das coleções pré-definidas exibidas em SavedScreen.
- * Categoriza heurísticamente cada SavedRepo via linguagem dominante.
- * Repositórios sem match em nenhuma coleção continuam visíveis em
- * "Todos" e "Recentes" — coleções são apenas atalhos visuais.
- */
 export type CollectionId = 'mobile' | 'backend' | 'tools' | 'ai-ml';
 
 export interface CollectionMeta {
   id: CollectionId;
   title: string;
-  /** Cor de fundo do ícone (hex). Mantida fixa por id pra UI consistente. */
   iconColor: string;
-  /** Glyph monoespaço usado dentro do quadrado colorido. */
   glyph: string;
 }
 
@@ -24,8 +16,6 @@ export const COLLECTIONS: readonly CollectionMeta[] = [
   { id: 'ai-ml', title: 'AI & ML', iconColor: '#B7791F', glyph: '✪' },
 ] as const;
 
-// Mapeamento conservador linguagem → coleção. Linguagens fora desta tabela
-// caem em null (repos aparecem só em "Todos" e "Recentes").
 const LANG_TO_COLLECTION: Record<string, CollectionId> = {
   swift: 'mobile',
   kotlin: 'mobile',

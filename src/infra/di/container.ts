@@ -16,7 +16,6 @@ import { InMemoryIssueRepository } from 'src/infra/repositories/InMemoryIssueRep
 import { InMemoryRepoRepository } from 'src/infra/repositories/InMemoryRepoRepository';
 import { InMemorySavedReposRepository } from 'src/infra/repositories/InMemorySavedReposRepository';
 
-// Expo expõe vars com prefixo EXPO_PUBLIC_ no bundle JS.
 const USE_MOCK = process.env.EXPO_PUBLIC_USE_MOCK !== 'false';
 
 function buildRepoRepository(): IRepoRepository {
@@ -29,11 +28,6 @@ function buildIssueRepository(): IIssueRepository {
   return new GitHubIssueRepository();
 }
 
-/**
- * SavedRepos sempre usa AsyncStorage em runtime real — não há "versão HTTP"
- * desta feature (persistência é puramente local). Em mock substituímos por
- * InMemory para isolar a UI do AsyncStorage durante o desenvolvimento.
- */
 function buildSavedReposRepository(): ISavedReposRepository {
   if (USE_MOCK) return new InMemorySavedReposRepository();
   return new AsyncStorageSavedReposRepository();

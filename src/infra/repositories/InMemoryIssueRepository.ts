@@ -18,9 +18,6 @@ function randomLatency(): number {
   return Math.floor(MIN_LATENCY_MS + Math.random() * (MAX_LATENCY_MS - MIN_LATENCY_MS));
 }
 
-// Simplificação do mock: filtro por `owner`/`repo` é ignorado. Todas as
-// issues do fixture são retornadas independentemente do repositório
-// solicitado. A implementação HTTP real respeitará ambos os parâmetros.
 export class InMemoryIssueRepository implements IIssueRepository {
   async list(params: ListIssuesParams): Promise<PaginatedResult<Issue>> {
     await delay(randomLatency());

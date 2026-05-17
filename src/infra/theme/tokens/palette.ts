@@ -1,6 +1,3 @@
-// Raw color palette. Origem: tokens CSS dos mockups Octolens.
-// Valores oklch() do design original convertidos para hex (sRGB) — RN não suporta oklch.
-// NÃO consumir diretamente. Usar tokens semânticos via lightTheme/darkTheme.
 export const palette = {
   warmWhite: '#fbfaf7',
   white: '#ffffff',

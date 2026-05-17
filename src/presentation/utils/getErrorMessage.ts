@@ -4,16 +4,6 @@ import { NetworkError } from '@/domain/errors/NetworkError';
 import { NotFoundError } from '@/domain/errors/NotFoundError';
 import { RateLimitError } from '@/domain/errors/RateLimitError';
 
-/**
- * Traduz qualquer erro (domain ou desconhecido) para string amigável ao usuário.
- *
- * Função pura — sem estado, sem efeito, sem hook. Pode ser chamada em qualquer
- * contexto: render, callback, fora de componente.
- *
- * @example
- * const { error } = useSearchRepos({ query });
- * if (error !== null) return <Text>{getErrorMessage(error)}</Text>;
- */
 export function getErrorMessage(error: unknown): string {
   if (error instanceof RateLimitError) {
     return 'Você excedeu o limite de requisições da API do GitHub. Aguarde alguns minutos.';

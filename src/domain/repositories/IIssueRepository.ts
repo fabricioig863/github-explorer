@@ -16,10 +16,5 @@ export interface CountOpenIssuesParams {
 
 export interface IIssueRepository {
   list(params: ListIssuesParams): Promise<PaginatedResult<Issue>>;
-  /**
-   * Conta apenas issues abertas (exclui pull requests).
-   * GitHub `open_issues_count` em /repos inclui PRs — usar este método
-   * pra obter número real de issues via Search API.
-   */
   countOpen(params: CountOpenIssuesParams): Promise<number>;
 }

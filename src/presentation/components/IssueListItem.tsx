@@ -13,13 +13,6 @@ interface IssueListItemProps {
   issue: Issue;
 }
 
-/**
- * Card de issue para listagem. Mostra título, labels (badges com cor
- * própria do GitHub), número, autor e data relativa.
- *
- * Sem onPress: telas atuais não navegam pra detalhe de issue (fora do
- * escopo do PDF). Apenas exibe.
- */
 export function IssueListItem({ issue }: IssueListItemProps) {
   const theme = useTheme<Theme>();
 

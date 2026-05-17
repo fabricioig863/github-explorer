@@ -2,8 +2,8 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useTheme } from '@shopify/restyle';
 import { Bookmark, Compass } from 'lucide-react-native';
 
-import { ExploreStack } from '@/presentation/navigation/ExploreStack';
-import type { TabsParamList } from '@/presentation/navigation/types';
+import { ExploreStack } from 'src/infra/navigation/ExploreStack';
+import type { TabsParamList } from 'src/infra/navigation/types';
 import { SavedScreen } from '@/presentation/screens/SavedScreen';
 import type { Theme } from 'src/infra/theme/lightTheme';
 
@@ -37,10 +37,6 @@ export function TabsNavigator() {
           tabBarIcon: ({ color }) => <Compass size={22} color={color} />,
         }}
         listeners={({ navigation }) => ({
-          // Tocar no tab Explorar sempre volta pra Search.
-          // Sem isto, React Navigation preserva a route ativa do stack:
-          // após visitar Issues e ir pra Saved, voltar ao tab Explorar
-          // re-renderiza Issues, não Search.
           tabPress: () => {
             navigation.navigate('ExploreTab', { screen: 'Search' });
           },

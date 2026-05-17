@@ -19,15 +19,6 @@ interface CardProps {
   onPress?: () => void;
 }
 
-/**
- * Container de surface com variants (surface = com borda, flat = só fundo).
- * Quando `onPress` é passado, vira pressable com feedback de opacidade.
- *
- * @example
- * <Card variant="surface" onPress={() => navigate('Detail')}>
- *   <Text variant="h3">Título</Text>
- * </Card>
- */
 export function Card({ children, variant = 'surface', onPress }: CardProps) {
   if (onPress === undefined) {
     return <CardBox variant={variant}>{children}</CardBox>;

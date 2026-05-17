@@ -155,7 +155,25 @@ direto.
 **um único arquivo**. Mock vs HTTP real é uma `if` lá. Testes substituem
 o container inteiro com `jest.mock('src/infra/di/container', ...)`.
 
-### 2.8. ESLint boundaries enforcing as regras
+### 2.8. Navigation mora na infra, não na presentation
+
+**Decisão:** `RootNavigator`, `TabsNavigator`, `ExploreStack` e `types.ts`
+vivem em `src/infra/navigation/`, não em `src/presentation/`.
+
+**Porquê:** React Navigation é um **framework externo**, com API própria
+(`NavigationContainer`, stack/tab navigators, `useNavigation`, `linking`).
+Configurar a árvore de rotas, mapear `screenOptions`, ligar tema ao
+`DarkTheme`/`DefaultTheme` da lib — tudo isso é **adapter** de uma
+biblioteca de plataforma, exatamente o que define a camada de infra.
+A presentation **consome** rotas (`navigation.navigate('RepoDetail', ...)`,
+`ExploreStackScreenProps`), mas não declara como elas se montam.
+
+Análogo direto: `infra/query/` (TanStack Query setup) e `infra/theme/`
+(Restyle config) seguem o mesmo critério — wiring de libs externas mora
+na infra. Cada screen continua importando `ExploreStackScreenProps` como
+tipo, sem saber qual lib resolve isso.
+
+### 2.9. ESLint boundaries enforcing as regras
 
 **Decisão:** `eslint-plugin-boundaries` mapeia `src/domain`,
 `src/application`, `src/infra`, `src/presentation` para "tipos" e proíbe
@@ -240,6 +258,9 @@ a React; botá-las no repositório mistura "regra de uso" com
 - `di/container.ts` — composition root.
 - `theme/` — Restyle config (light/dark, fonts, tokens).
 - `query/` — `QueryClient` + `QueryProvider`.
+- `navigation/` — `RootNavigator`, `TabsNavigator`, `ExploreStack` e
+  `types.ts`. Wiring de React Navigation, tema dinâmico (light/dark)
+  injetado no `NavigationContainer`.
 
 **O que NÃO mora aqui:** lógica de negócio (vive no application),
 JSX (vive no presentation).
@@ -264,7 +285,10 @@ adicionarmos cache offline, mexemos só aqui.
   - `useDebounce` genérico.
 - `utils/` — funções puras (`getErrorMessage`, `getEmptySearchCopy`,
   `formatRelativeDate`).
-- `navigation/` — `RootNavigator`, `TabsNavigator`, `ExploreStack`.
+
+> Navigation **não** mora aqui — vive em `infra/navigation/` (ver 2.8).
+> Screens consomem `ExploreStackScreenProps` / `useNavigation()` como
+> contratos, sem conhecer a montagem das rotas.
 
 **Princípio:** hooks **adaptam** o use case ao ciclo de vida do React
 Query. Não fazem validação própria — a do use case é a fonte da verdade.

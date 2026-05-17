@@ -2,11 +2,6 @@ import type { Repository } from '@/domain/entities/Repository';
 import type { SavedRepo } from '@/domain/entities/SavedRepo';
 import type { ISavedReposRepository } from '@/domain/repositories/ISavedReposRepository';
 
-/**
- * Mock em memória da feature Saved. Não persiste entre reloads.
- * Útil para EXPO_PUBLIC_USE_MOCK=true durante desenvolvimento da UI sem
- * tocar AsyncStorage e para testes determinísticos.
- */
 export class InMemorySavedReposRepository implements ISavedReposRepository {
   private entries: SavedRepo[];
 

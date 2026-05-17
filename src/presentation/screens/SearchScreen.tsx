@@ -14,7 +14,7 @@ import { Spinner } from '@/presentation/design-system/primitives/Spinner';
 import { Text } from '@/presentation/design-system/primitives/Text';
 import { useDebounce } from '@/presentation/hooks/useDebounce';
 import { useSearchRepos } from '@/presentation/hooks/useSearchRepos';
-import type { ExploreStackScreenProps } from '@/presentation/navigation/types';
+import type { ExploreStackScreenProps } from 'src/infra/navigation/types';
 import { getEmptySearchCopy } from '@/presentation/utils/getEmptySearchCopy';
 import { getErrorMessage } from '@/presentation/utils/getErrorMessage';
 import type { Theme } from 'src/infra/theme/lightTheme';

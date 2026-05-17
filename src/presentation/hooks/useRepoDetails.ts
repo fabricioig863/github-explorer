@@ -7,12 +7,6 @@ interface UseRepoDetailsParams {
   repo: string;
 }
 
-/**
- * Hook de detalhes de um repositório. Desabilitado quando owner ou repo vazios.
- *
- * @example
- * const { data, isLoading, error } = useRepoDetails({ owner: 'facebook', repo: 'react' });
- */
 export function useRepoDetails({ owner, repo }: UseRepoDetailsParams) {
   return useQuery({
     queryKey: ['repoDetails', owner, repo],

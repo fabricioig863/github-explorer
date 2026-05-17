@@ -47,14 +47,6 @@ const SIZE_TEXT_VARIANT: Record<ButtonSize, 'bodySmall' | 'body' | 'h3'> = {
   lg: 'h3',
 };
 
-/**
- * Botão com variants (primary/accent/outline/ghost) × sizes (sm/md/lg) × estados.
- * Loading substitui texto por spinner mantendo dimensões.
- *
- * @example
- * <Button variant="primary" size="md" onPress={handle}>Salvar</Button>
- * <Button variant="ghost" leftIcon={<Search size={16} />}>Buscar</Button>
- */
 export function Button({
   children,
   variant = 'primary',

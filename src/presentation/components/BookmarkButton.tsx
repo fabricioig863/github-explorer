@@ -10,11 +10,6 @@ interface BookmarkButtonProps {
   onPress: () => void;
 }
 
-/**
- * Ícone-botão usado no header de RepoDetail. Alterna entre Bookmark vazio
- * (não salvo) e BookmarkCheck cheio (salvo). Sem texto — espaço de header
- * é pequeno; estado é comunicado pelo ícone e pelo `accessibilityState`.
- */
 export function BookmarkButton({ isSaved, disabled = false, onPress }: BookmarkButtonProps) {
   const theme = useTheme<Theme>();
   const color = isSaved ? theme.colors.accent : theme.colors.fg;

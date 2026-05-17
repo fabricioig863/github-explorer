@@ -19,12 +19,6 @@ interface SearchIssuesCountResponse {
   total_count: number;
 }
 
-/**
- * Listagem usa /search/issues com type:issue para excluir PRs no servidor.
- * /repos/{owner}/{repo}/issues mistura issues e PRs e não oferece filtro,
- * o que zerava páginas inteiras em repos com fluxo alto de PRs (ex.
- * facebook/react-native: primeira página de 20 vem 100% PR).
- */
 export class GitHubIssueRepository implements IIssueRepository {
   async list({
     owner,

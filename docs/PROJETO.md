@@ -72,10 +72,10 @@ src/
 │   ├── di/             # container — wire-up de dependências
 │   ├── theme/          # Restyle theme (light/dark, fonts, tokens)
 │   ├── query/          # QueryClient + QueryProvider (React Query)
+│   ├── navigation/     # RootNavigator, TabsNavigator, ExploreStack (React Navigation wiring)
 │   └── reactotron/     # Reactotron config (debug)
 │
 └── presentation/       # tudo o que o usuário vê. Pode importar todas as outras.
-    ├── navigation/     # RootNavigator, TabsNavigator, ExploreStack
     ├── screens/        # 4 telas: Search, RepoDetail, Issues, Profile
     ├── components/     # RepoListItem, IssueListItem, EmptyState
     │   └── profile/    # AvatarRing, CommitList, ContribCard, ProfileHero, ThemeToggleButton
@@ -439,11 +439,7 @@ export const queryClient = new QueryClient({
 (via react-query devtools-like). Import lateral em `App.tsx` na primeira linha
 faz a conexão na inicialização do app em dev.
 
----
-
-### 4.4. Presentation (UI)
-
-#### 4.4.1. Navigation (`src/presentation/navigation/`)
+#### 4.3.7. Navigation (`src/infra/navigation/`)
 
 - `RootNavigator.tsx` — `NavigationContainer` + tema dinâmico (light/dark).
 - `TabsNavigator.tsx` — bottom tabs: **Explore** e **Me** (Profile).
@@ -458,7 +454,18 @@ resto.
 Detalhe técnico: `headerBackButtonDisplayMode: 'minimal'` (API nova v7;
 `headerBackTitleVisible` saiu).
 
-#### 4.4.2. Hooks (`src/presentation/hooks/`)
+> **Por que navigation está na infra e não na presentation?** React Navigation
+> é uma biblioteca externa de plataforma (rotas nativas, gestos, deep-linking).
+> Configurá-la — registrar `NavigationContainer`, montar stacks, ligar tema —
+> é **adaptação de framework**, idêntico em natureza ao wiring de Restyle
+> (`theme/`) ou TanStack Query (`query/`). A presentation **consome** rotas
+> via `useNavigation` / `ScreenProps`, sem conhecer a montagem.
+
+---
+
+### 4.4. Presentation (UI)
+
+#### 4.4.1. Hooks (`src/presentation/hooks/`)
 
 ##### `useSearchRepos.ts`
 
@@ -505,7 +512,7 @@ lista, por exemplo).
 Hook genérico `useDebounce<T>(value, delay)`. Usa `setTimeout` + cleanup. Usado
 no SearchScreen com 300ms.
 
-#### 4.4.3. Utils (`src/presentation/utils/`)
+#### 4.4.2. Utils (`src/presentation/utils/`)
 
 ##### `getErrorMessage.ts`
 
@@ -530,7 +537,7 @@ Wrapper de uma linha sobre `formatDistanceToNow` do date-fns com locale
 `ptBR`. Isolar a lib custou 5 linhas e protege todo o resto do app de uma
 troca futura.
 
-#### 4.4.4. Design System (`src/presentation/design-system/`)
+#### 4.4.3. Design System (`src/presentation/design-system/`)
 
 - **Primitives** (`primitives/`):
   - `Box.ts` — `createBox<Theme>()` do Restyle. Aceita props de spacing,
@@ -549,7 +556,7 @@ troca futura.
 > Descoberta importante: `createBox` cobre layout primitivo, mas theme
 > `variant` **só funciona** com `createRestyleComponent + createVariant`.
 
-#### 4.4.5. Components (`src/presentation/components/`)
+#### 4.4.4. Components (`src/presentation/components/`)
 
 Componentes específicos de features:
 
@@ -570,7 +577,7 @@ E o sub-pacote `profile/` para a tela Profile:
 - `ThemeToggleButton.tsx` — botão de toggle light/dark conectado ao
   `AppThemeProvider`.
 
-#### 4.4.6. Screens (`src/presentation/screens/`)
+#### 4.4.5. Screens (`src/presentation/screens/`)
 
 Todas as telas seguem o **mesmo pattern de state machine**:
 
@@ -597,7 +604,7 @@ topo + corpo variável.
 > design system está estabilizado, e a tela só servia em fase de
 > desenvolvimento. Histórico em git.
 
-#### 4.4.7. App.tsx (entry point)
+#### 4.4.6. App.tsx (entry point)
 
 ```tsx
 import 'src/infra/reactotron/ReactotronConfig';
@@ -659,10 +666,10 @@ pnpm test           # jest (ver pendência em §6.2.1)
       CountOpenIssues, GetUserProfile, GetRecentCommits)
 - [x] **Infrastructure completa** — theme (light/dark), DI, http client,
       error mapper, DTOs, mappers (repo/issue/user/event), mocks E
-      implementações HTTP reais (Repo / Issue / User)
-- [x] **Presentation completa** — navigation (tabs Explore + Me), hooks
-      React Query, design system, 4 telas reais validadas visualmente em
-      light + dark
+      implementações HTTP reais (Repo / Issue / User), navigation
+      (RootNavigator + tabs Explore/Me + ExploreStack)
+- [x] **Presentation completa** — hooks React Query, design system,
+      4 telas reais validadas visualmente em light + dark
 - [x] Busca enriquecida (`in:name,description` + `repo:owner/name`)
 - [x] Issues via `/search/issues` (sem mistura com PRs)
 - [x] EmptyState que adapta texto ao formato do termo
@@ -1089,6 +1096,7 @@ flowchart TB
         THSTOR["themeStorage"]:::infra
         FONTS["fonts (Geist)"]:::infra
         RTRON["Reactotron"]:::infra
+        NAVCFG["Navigation<br/>RootNavigator · Tabs · ExploreStack"]:::infra
     end
 
     %% Presentation
@@ -1109,7 +1117,6 @@ flowchart TB
         CMP["Components<br/>RepoListItem · IssueListItem · EmptyState"]:::present
         PCMP["Profile components<br/>AvatarRing · CommitList · ContribCard ·<br/>ProfileHero · ThemeToggleButton"]:::present
         UTIL["Utils<br/>getErrorMessage · getEmptySearchCopy ·<br/>formatRelativeDate"]:::present
-        NAVCFG["Navigation<br/>RootNavigator · Tabs · ExploreStack"]:::present
     end
 
     %% Main

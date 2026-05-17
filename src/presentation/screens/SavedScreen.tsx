@@ -14,7 +14,7 @@ import { Skeleton } from '@/presentation/design-system/Skeleton';
 import { Box } from '@/presentation/design-system/primitives/Box';
 import { Text } from '@/presentation/design-system/primitives/Text';
 import { useSavedRepos } from '@/presentation/hooks/useSavedRepos';
-import type { ProfileTabScreenProps } from '@/presentation/navigation/types';
+import type { ProfileTabScreenProps } from 'src/infra/navigation/types';
 import { getErrorMessage } from '@/presentation/utils/getErrorMessage';
 import {
   COLLECTIONS,

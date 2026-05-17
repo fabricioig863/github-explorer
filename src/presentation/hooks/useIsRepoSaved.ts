@@ -3,10 +3,6 @@ import { useQuery } from '@tanstack/react-query';
 import { SAVED_REPOS_QUERY_KEY } from '@/presentation/hooks/useSavedRepos';
 import { container } from 'src/infra/di/container';
 
-/**
- * Indica se um repositório está salvo. Reusa a queryKey de
- * `useSavedRepos` para casar o cache — invalidar uma invalida a outra.
- */
 export function useIsRepoSaved(fullName: string) {
   return useQuery<boolean>({
     queryKey: [...SAVED_REPOS_QUERY_KEY, 'isSaved', fullName],

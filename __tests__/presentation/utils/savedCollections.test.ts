@@ -47,7 +47,7 @@ describe('savedCollections', () => {
         makeSavedRepo({ id: 3, language: 'Go' }),
         makeSavedRepo({ id: 4, language: 'Shell' }),
         makeSavedRepo({ id: 5, language: 'Jupyter Notebook' }),
-        makeSavedRepo({ id: 6, language: 'TypeScript' }), // ignored
+        makeSavedRepo({ id: 6, language: 'TypeScript' }),
       ];
       expect(countByCollection(repos)).toEqual({
         mobile: 2,

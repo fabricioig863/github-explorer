@@ -63,7 +63,6 @@ export function AppThemeProvider({ children }: AppThemeProviderProps) {
   );
 }
 
-// Para LER tokens (cores, spacing), use `useTheme<Theme>()` do Restyle, NÃO esse hook.
 export function useThemeMode(): ThemeModeContextValue {
   const context = useContext(ThemeModeContext);
   if (context === null) {

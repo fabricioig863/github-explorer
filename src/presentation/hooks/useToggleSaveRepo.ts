@@ -9,11 +9,6 @@ interface ToggleInput {
   isCurrentlySaved: boolean;
 }
 
-/**
- * Toggle save/unsave de um repositório. Invalida o cache de saved
- * em sucesso para os consumers (`useSavedRepos`, `useIsRepoSaved`)
- * verem o novo estado sem refetch manual.
- */
 export function useToggleSaveRepo() {
   const queryClient = useQueryClient();
   return useMutation({

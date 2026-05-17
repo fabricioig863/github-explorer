@@ -7,9 +7,7 @@ import { Text } from '@/presentation/design-system/primitives/Text';
 type AvatarSize = 'sm' | 'md' | 'lg' | 'xl';
 
 interface AvatarProps {
-  /** URL da imagem (geralmente avatar_url da API GitHub). */
   uri: string;
-  /** Login do usuário — usado pra gerar iniciais de fallback. */
   login: string;
   size?: AvatarSize;
 }
@@ -42,16 +40,6 @@ function getInitials(login: string): string {
   return (firstChar + secondChar).toUpperCase();
 }
 
-/**
- * Avatar circular com fallback de iniciais quando imagem falha.
- * Tamanho via prop semântica (sm/md/lg/xl).
- *
- * NOTA: `style` no Image é exceção justificada — Image do RN não aceita props Restyle.
- * `borderRadius: sizePx / 2` cria círculo perfeito (token pill seria overkill aqui).
- *
- * @example
- * <Avatar uri="https://avatars.githubusercontent.com/u/69631" login="facebook" size="md" />
- */
 export function Avatar({ uri, login, size = 'md' }: AvatarProps) {
   const [errored, setErrored] = useState(false);
   const sizePx = SIZE_PX[size];

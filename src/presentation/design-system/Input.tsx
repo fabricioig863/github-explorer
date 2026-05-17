@@ -7,31 +7,12 @@ import { Text } from '@/presentation/design-system/primitives/Text';
 import type { Theme } from 'src/infra/theme/lightTheme';
 
 interface InputProps extends Omit<TextInputProps, 'style'> {
-  /** Label acima do input. Opcional. */
   label?: string;
-  /** Mensagem de erro abaixo. Quando presente, input recebe estilo de erro. */
   error?: string;
-  /** Texto auxiliar abaixo (sumido se error presente). */
   helperText?: string;
-  /** Ícone à esquerda dentro do input, ex: <Search size={16} /> */
   leftIcon?: ReactNode;
 }
 
-/**
- * Campo de texto com label, error e helperText.
- * Erro tem precedência sobre helperText (não exibe ambos).
- *
- * NOTA: `style` no TextInput é exceção justificada — TextInput nativo não aceita props Restyle.
- *
- * @example
- * <Input
- *   label="Email"
- *   value={email}
- *   onChangeText={setEmail}
- *   error={emailError}
- *   helperText="Vamos enviar confirmação"
- * />
- */
 export function Input({
   label,
   error,

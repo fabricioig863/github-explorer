@@ -17,8 +17,6 @@ const THUMB = 12;
 const THUMB_INSET = 3;
 const THUMB_END = TRACK_W - THUMB - THUMB_INSET * 2;
 
-// Thumb sempre branco para contraste em ambos os temas — invariante visual,
-// não derivado de token semântico.
 const THUMB_COLOR = '#ffffff';
 
 export function ThemeToggleButton({ isDark, onToggle }: ThemeToggleButtonProps) {

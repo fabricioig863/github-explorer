@@ -8,14 +8,6 @@ interface UseSearchReposParams {
 
 const PER_PAGE = 20;
 
-/**
- * Hook de busca paginada de repositórios.
- * Quando query é vazia ou < 2 chars (após trim), fica disabled.
- *
- * @example
- * const { data, fetchNextPage, hasNextPage, isLoading, error } =
- *   useSearchRepos({ query: 'react native' });
- */
 export function useSearchRepos({ query }: UseSearchReposParams) {
   const trimmedQuery = query.trim();
   const enabled = trimmedQuery.length >= 2;

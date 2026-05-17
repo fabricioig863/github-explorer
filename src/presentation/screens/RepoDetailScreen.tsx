@@ -16,7 +16,7 @@ import { useIsRepoSaved } from '@/presentation/hooks/useIsRepoSaved';
 import { useOpenIssuesCount } from '@/presentation/hooks/useOpenIssuesCount';
 import { useRepoDetails } from '@/presentation/hooks/useRepoDetails';
 import { useToggleSaveRepo } from '@/presentation/hooks/useToggleSaveRepo';
-import type { ExploreStackScreenProps } from '@/presentation/navigation/types';
+import type { ExploreStackScreenProps } from 'src/infra/navigation/types';
 import { formatCount } from '@/presentation/utils/formatCount';
 import { formatRelativeDate } from '@/presentation/utils/formatRelativeDate';
 import { getErrorMessage } from '@/presentation/utils/getErrorMessage';
@@ -33,8 +33,6 @@ export function RepoDetailScreen({ route, navigation }: Props) {
   const { data: isSaved = false } = useIsRepoSaved(fullName);
   const toggleSave = useToggleSaveRepo();
 
-  // Header right ganha BookmarkButton assim que o repo carrega.
-  // useLayoutEffect evita um flash em que o header renderiza sem o ícone.
   useLayoutEffect(() => {
     navigation.setOptions({
       title: 'Repositório',

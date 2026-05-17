@@ -11,12 +11,6 @@ interface CollectionCardProps {
   onPress?: () => void;
 }
 
-/**
- * Card grande para uma coleção fixa. Square colorido + título + count.
- * `iconColor` é hex cru (vem de COLLECTIONS, não do theme) por design — as
- * cores das coleções são identidade própria da feature, independente do
- * modo light/dark.
- */
 export function CollectionCard({ title, count, iconColor, glyph, onPress }: CollectionCardProps) {
   const content = (
     <Box

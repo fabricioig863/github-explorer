@@ -14,17 +14,6 @@ interface SegmentedTabsProps<T extends string> {
   onChange: (id: T) => void;
 }
 
-/**
- * Pills horizontais com seleção exclusiva. Variante selecionada usa
- * `bg=fg` (alto contraste), demais ficam outline.
- *
- * @example
- * <SegmentedTabs
- *   tabs={[{ id: 'all', label: 'Todos · 47' }]}
- *   selected={tab}
- *   onChange={setTab}
- * />
- */
 export function SegmentedTabs<T extends string>({
   tabs,
   selected,

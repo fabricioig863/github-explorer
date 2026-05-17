@@ -1,7 +1,7 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useTheme } from '@shopify/restyle';
 
-import type { ExploreStackParamList } from '@/presentation/navigation/types';
+import type { ExploreStackParamList } from 'src/infra/navigation/types';
 import { IssuesScreen } from '@/presentation/screens/IssuesScreen';
 import { RepoDetailScreen } from '@/presentation/screens/RepoDetailScreen';
 import { SearchScreen } from '@/presentation/screens/SearchScreen';

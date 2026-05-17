@@ -1,7 +1,3 @@
-// Mapa de cores das linguagens de programação.
-// Origem: GitHub Linguist (https://github.com/github-linguist/linguist/blob/main/lib/linguist/languages.yml)
-// NÃO está no theme porque cor de linguagem é dado externo, não decisão de tema —
-// não muda entre light/dark. Vive aqui como mapa estático.
 export const LANGUAGE_COLORS: Readonly<Record<string, string>> = {
   TypeScript: '#3178c6',
   JavaScript: '#f1e05a',

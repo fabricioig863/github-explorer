@@ -92,8 +92,8 @@ describe('SavedScreen', () => {
     expect(screen.getByText('Backend')).toBeTruthy();
     expect(screen.getByText('Ferramentas')).toBeTruthy();
     expect(screen.getByText('AI & ML')).toBeTruthy();
-    expect(screen.getByText('2 repos')).toBeTruthy(); // Mobile
-    expect(screen.getByText('1 repo')).toBeTruthy(); // Backend
+    expect(screen.getByText('2 repos')).toBeTruthy();
+    expect(screen.getByText('1 repo')).toBeTruthy();
   });
 
   it('shows empty state copy when there are no saved repos and Todos tab is active', async () => {

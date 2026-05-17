@@ -10,13 +10,6 @@ interface UseIssuesParams {
 
 const PER_PAGE = 20;
 
-/**
- * Hook de listagem paginada de issues. Default state='open'.
- *
- * @example
- * const { data, fetchNextPage, hasNextPage } =
- *   useIssues({ owner: 'facebook', repo: 'react', state: 'open' });
- */
 export function useIssues({ owner, repo, state = 'open' }: UseIssuesParams) {
   return useInfiniteQuery({
     queryKey: ['issues', owner, repo, state],

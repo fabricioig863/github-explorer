@@ -1,7 +1,3 @@
-/**
- * Shape exato do que o GitHub retorna pra um repository.
- * Apenas os campos que consumimos — não preciso modelar tudo.
- */
 export interface OwnerDto {
   id: number;
   login: string;
@@ -31,9 +27,6 @@ export interface RepositoryDto {
   license?: LicenseDto | null;
 }
 
-/**
- * Resposta da Search API. GitHub retorna wrapper específico em /search.
- */
 export interface SearchRepositoriesResponseDto {
   total_count: number;
   incomplete_results: boolean;

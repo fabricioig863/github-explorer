@@ -9,10 +9,6 @@ interface UseOpenIssuesCountParams {
 
 const FIVE_MINUTES_MS = 5 * 60 * 1000;
 
-/**
- * Conta issues abertas reais (sem PRs).
- * Fonte: GitHub Search API — `open_issues_count` em /repos inclui pull requests.
- */
 export function useOpenIssuesCount({ owner, repo }: UseOpenIssuesCountParams) {
   return useQuery({
     queryKey: ['openIssuesCount', owner, repo],

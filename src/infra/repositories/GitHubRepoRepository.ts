@@ -28,15 +28,6 @@ export function buildSearchQuery(rawQuery: string): string {
   return `${trimmed} in:name,description`;
 }
 
-/**
- * Implementação HTTP do IRepoRepository — conecta na API do GitHub.
- *
- * Endpoints:
- *   - GET /search/repositories?q={q}&sort=stars&order=desc&page={p}&per_page={pp}
- *   - GET /repos/{owner}/{repo}
- *
- * Erros HTTP são traduzidos pra DomainError via mapHttpError.
- */
 export class GitHubRepoRepository implements IRepoRepository {
   async search({ query, page, perPage }: SearchReposParams): Promise<PaginatedResult<Repository>> {
     try {

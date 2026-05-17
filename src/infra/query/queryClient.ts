@@ -7,12 +7,6 @@ import { RateLimitError } from '@/domain/errors/RateLimitError';
 const FIVE_MINUTES = 5 * 60 * 1000;
 const THIRTY_SECONDS = 30 * 1000;
 
-/**
- * Decide se falha deve ser retentada.
- *
- * Não retenta: RateLimitError, InvalidQueryError, NotFoundError (determinísticos).
- * Retenta 1×: NetworkError, UnexpectedError (transientes).
- */
 function shouldRetry(failureCount: number, error: unknown): boolean {
   if (error instanceof RateLimitError) return false;
   if (error instanceof InvalidQueryError) return false;

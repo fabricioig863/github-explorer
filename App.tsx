@@ -4,12 +4,10 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 
-import { RootNavigator } from '@/presentation/navigation/RootNavigator';
+import { RootNavigator } from 'src/infra/navigation/RootNavigator';
 import { QueryProvider } from 'src/infra/query/QueryProvider';
 import { AppThemeProvider } from 'src/infra/theme/AppThemeProvider';
 import { useAppFonts } from 'src/infra/theme/fonts';
-
-// dentro de App, fora do return:
 
 void SplashScreen.preventAutoHideAsync();
 

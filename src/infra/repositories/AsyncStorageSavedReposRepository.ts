@@ -6,9 +6,6 @@ import type { ISavedReposRepository } from '@/domain/repositories/ISavedReposRep
 
 const STORAGE_KEY = '@github-explorer:saved-repos:v1';
 
-/**
- * Shape persistido. Date vira string ISO para JSON.stringify funcionar.
- */
 interface SavedRepoPersisted {
   id: number;
   fullName: string;
@@ -41,10 +38,6 @@ function fromPersisted(entry: SavedRepoPersisted): SavedRepo {
   return { ...entry, savedAt: new Date(entry.savedAt) };
 }
 
-/**
- * Persiste a coleção de saved repos como um único JSON no AsyncStorage.
- * Volume esperado é pequeno (dezenas), então read+write totais não custam.
- */
 export class AsyncStorageSavedReposRepository implements ISavedReposRepository {
   async list(): Promise<SavedRepo[]> {
     const raw = await AsyncStorage.getItem(STORAGE_KEY);
@@ -53,7 +46,6 @@ export class AsyncStorageSavedReposRepository implements ISavedReposRepository {
       const parsed = JSON.parse(raw) as SavedRepoPersisted[];
       return parsed.map(fromPersisted).sort((a, b) => b.savedAt.getTime() - a.savedAt.getTime());
     } catch {
-      // Storage corrompido — começar do zero é mais seguro que lançar.
       return [];
     }
   }

@@ -3,13 +3,6 @@ import axios, { type AxiosInstance } from 'axios';
 const GITHUB_API_BASE = 'https://api.github.com';
 const REQUEST_TIMEOUT_MS = 15000;
 
-/**
- * Cliente HTTP configurado pra API do GitHub.
- * Singleton — usar mesmo instance em todos os repositórios.
- *
- * Interceptor adiciona Bearer token se EXPO_PUBLIC_GITHUB_TOKEN estiver setado.
- * Sem token: 60 req/h. Com token: 5000 req/h.
- */
 export function createHttpClient(): AxiosInstance {
   const client = axios.create({
     baseURL: GITHUB_API_BASE,
