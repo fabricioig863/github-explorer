@@ -3,7 +3,6 @@ import { useCallback } from 'react';
 import { FlatList, RefreshControl, type ListRenderItem } from 'react-native';
 
 import type { Issue } from '@/domain/entities/Issue';
-import type { Theme } from '@/infrastructure/theme/lightTheme';
 import { EmptyState } from '@/presentation/components/EmptyState';
 import { IssueListItem } from '@/presentation/components/IssueListItem';
 import { Box } from '@/presentation/design-system/primitives/Box';
@@ -13,6 +12,7 @@ import { useIssues } from '@/presentation/hooks/useIssues';
 import { useOpenIssuesCount } from '@/presentation/hooks/useOpenIssuesCount';
 import type { ExploreStackScreenProps } from '@/presentation/navigation/types';
 import { getErrorMessage } from '@/presentation/utils/getErrorMessage';
+import type { Theme } from 'src/infra/theme/lightTheme';
 
 type Props = ExploreStackScreenProps<'Issues'>;
 
@@ -30,6 +30,7 @@ export function IssuesScreen({ route }: Props) {
     refetch,
     error,
   } = useIssues({ owner, repo, state: 'open' });
+
   const { data: totalCount } = useOpenIssuesCount({ owner, repo });
 
   const issues: Issue[] = data?.pages.flatMap((p) => p.items) ?? [];

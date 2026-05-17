@@ -6,9 +6,9 @@ import {
 } from '@react-navigation/native';
 import { useTheme } from '@shopify/restyle';
 
-import { useThemeMode } from '@/infrastructure/theme/AppThemeProvider';
-import type { Theme } from '@/infrastructure/theme/lightTheme';
 import { TabsNavigator } from '@/presentation/navigation/TabsNavigator';
+import { useThemeMode } from 'src/infra/theme/AppThemeProvider';
+import type { Theme } from 'src/infra/theme/lightTheme';
 
 /**
  * Cria theme do React Navigation usando tokens do app — sincroniza

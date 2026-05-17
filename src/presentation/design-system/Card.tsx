@@ -2,8 +2,8 @@ import { createRestyleComponent, createVariant, type VariantProps } from '@shopi
 import type { ComponentProps, ReactNode } from 'react';
 import { Pressable } from 'react-native';
 
-import type { Theme } from '@/infrastructure/theme/lightTheme';
 import { Box } from '@/presentation/design-system/primitives/Box';
+import type { Theme } from 'src/infra/theme/lightTheme';
 
 type CardVariant = Exclude<keyof Theme['cardVariants'], 'defaults'>;
 type CardBoxProps = VariantProps<Theme, 'cardVariants'> & ComponentProps<typeof Box>;

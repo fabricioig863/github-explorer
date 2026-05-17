@@ -1,6 +1,6 @@
 import { createTheme } from '@shopify/restyle';
 
-import { palette } from '@/infrastructure/theme/tokens/palette';
+import { palette } from 'src/infra/theme/tokens/palette';
 
 export const lightTheme = createTheme({
   colors: {

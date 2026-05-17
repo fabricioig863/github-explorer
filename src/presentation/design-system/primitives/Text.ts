@@ -1,6 +1,6 @@
 import { createText } from '@shopify/restyle';
 
-import type { Theme } from '@/infrastructure/theme/lightTheme';
+import type { Theme } from 'src/infra/theme/lightTheme';
 
 /**
  * Primitivo de texto — wrapper sobre Text com variants tipadas via theme.

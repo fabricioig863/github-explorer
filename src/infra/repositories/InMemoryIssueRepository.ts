@@ -5,7 +5,7 @@ import type {
   ListIssuesParams,
 } from '@/domain/repositories/IIssueRepository';
 import type { PaginatedResult } from '@/domain/repositories/Pagination';
-import { ISSUES_FIXTURE } from '@/infrastructure/repositories/fixtures/issues.fixture';
+import { ISSUES_FIXTURE } from 'src/infra/repositories/fixtures/issues.fixture';
 
 const MIN_LATENCY_MS = 300;
 const MAX_LATENCY_MS = 500;

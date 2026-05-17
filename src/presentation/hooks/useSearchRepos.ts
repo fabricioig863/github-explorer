@@ -1,6 +1,6 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
 
-import { container } from '@/infrastructure/di/container';
+import { container } from 'src/infra/di/container';
 
 interface UseSearchReposParams {
   query: string;

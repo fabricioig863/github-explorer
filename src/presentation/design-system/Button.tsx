@@ -2,10 +2,10 @@ import { createRestyleComponent, createVariant, type VariantProps } from '@shopi
 import type { ComponentProps, ReactNode } from 'react';
 import { Pressable } from 'react-native';
 
-import type { Theme } from '@/infrastructure/theme/lightTheme';
 import { Box } from '@/presentation/design-system/primitives/Box';
 import { Spinner } from '@/presentation/design-system/primitives/Spinner';
 import { Text } from '@/presentation/design-system/primitives/Text';
+import type { Theme } from 'src/infra/theme/lightTheme';
 
 type ButtonBoxProps = VariantProps<Theme, 'buttonVariants'> & ComponentProps<typeof Box>;
 const ButtonBox = createRestyleComponent<ButtonBoxProps, Theme>(

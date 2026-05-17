@@ -2,12 +2,12 @@ import { useTheme } from '@shopify/restyle';
 import { GitFork, Star } from 'lucide-react-native';
 
 import type { Repository } from '@/domain/entities/Repository';
-import type { Theme } from '@/infrastructure/theme/lightTheme';
 import { Avatar } from '@/presentation/design-system/Avatar';
 import { Card } from '@/presentation/design-system/Card';
 import { Box } from '@/presentation/design-system/primitives/Box';
 import { LanguageDot } from '@/presentation/design-system/primitives/LanguageDot';
 import { Text } from '@/presentation/design-system/primitives/Text';
+import type { Theme } from 'src/infra/theme/lightTheme';
 
 interface RepoListItemProps {
   repo: Repository;

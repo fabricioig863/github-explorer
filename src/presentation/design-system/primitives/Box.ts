@@ -1,6 +1,6 @@
 import { createBox } from '@shopify/restyle';
 
-import type { Theme } from '@/infrastructure/theme/lightTheme';
+import type { Theme } from 'src/infra/theme/lightTheme';
 
 /**
  * Primitivo de layout — wrapper sobre View com props tipadas via theme.

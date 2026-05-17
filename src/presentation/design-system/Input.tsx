@@ -2,9 +2,9 @@ import { useTheme } from '@shopify/restyle';
 import type { ReactNode } from 'react';
 import { TextInput, type TextInputProps } from 'react-native';
 
-import type { Theme } from '@/infrastructure/theme/lightTheme';
 import { Box } from '@/presentation/design-system/primitives/Box';
 import { Text } from '@/presentation/design-system/primitives/Text';
+import type { Theme } from 'src/infra/theme/lightTheme';
 
 interface InputProps extends Omit<TextInputProps, 'style'> {
   /** Label acima do input. Opcional. */

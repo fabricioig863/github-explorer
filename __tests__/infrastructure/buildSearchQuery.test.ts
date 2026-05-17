@@ -1,4 +1,4 @@
-import { buildSearchQuery } from '@/infrastructure/repositories/GitHubRepoRepository';
+import { buildSearchQuery } from 'src/infra/repositories/GitHubRepoRepository';
 
 describe('buildSearchQuery', () => {
   it('appends in:name,description for a simple single-token term', () => {

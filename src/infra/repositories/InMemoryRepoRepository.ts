@@ -2,7 +2,7 @@ import type { Repository } from '@/domain/entities/Repository';
 import { NotFoundError } from '@/domain/errors/NotFoundError';
 import type { IRepoRepository, SearchReposParams } from '@/domain/repositories/IRepoRepository';
 import type { PaginatedResult } from '@/domain/repositories/Pagination';
-import { REPOS_FIXTURE } from '@/infrastructure/repositories/fixtures/repos.fixture';
+import { REPOS_FIXTURE } from 'src/infra/repositories/fixtures/repos.fixture';
 
 const MIN_LATENCY_MS = 300;
 const MAX_LATENCY_MS = 500;

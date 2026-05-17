@@ -4,7 +4,6 @@ import { useCallback, useState } from 'react';
 import { FlatList, RefreshControl, type ListRenderItem } from 'react-native';
 
 import type { Repository } from '@/domain/entities/Repository';
-import type { Theme } from '@/infrastructure/theme/lightTheme';
 import { EmptyState } from '@/presentation/components/EmptyState';
 import { RepoListItem } from '@/presentation/components/RepoListItem';
 import { Input } from '@/presentation/design-system/Input';
@@ -16,6 +15,7 @@ import { useSearchRepos } from '@/presentation/hooks/useSearchRepos';
 import type { ExploreStackScreenProps } from '@/presentation/navigation/types';
 import { getEmptySearchCopy } from '@/presentation/utils/getEmptySearchCopy';
 import { getErrorMessage } from '@/presentation/utils/getErrorMessage';
+import type { Theme } from 'src/infra/theme/lightTheme';
 
 type Props = ExploreStackScreenProps<'Search'>;
 
@@ -39,7 +39,7 @@ export function SearchScreen({ navigation }: Props) {
   } = useSearchRepos({ query: debouncedQuery });
 
   const repos: Repository[] = data?.pages.flatMap((p) => p.items) ?? [];
-  const totalCount = data?.pages[0]?.totalCount ?? 0;
+  const totalCount = data?.pages[0]?.totalCount;
   const queryHasMinLength = debouncedQuery.trim().length >= MIN_QUERY_LENGTH;
 
   const handleRepoPress = useCallback(
@@ -111,11 +111,13 @@ export function SearchScreen({ navigation }: Props) {
   return (
     <Box flex={1} backgroundColor="bg">
       <SearchHeader query={query} onChangeQuery={setQuery} />
-      <Box paddingHorizontal="xxxl" paddingVertical="md">
-        <Text variant="caption">
-          {totalCount.toLocaleString('pt-BR')} resultado{totalCount === 1 ? '' : 's'}
-        </Text>
-      </Box>
+      {totalCount !== undefined && (
+        <Box paddingHorizontal="xxxl" paddingVertical="md">
+          <Text variant="caption">
+            {totalCount.toLocaleString('pt-BR')} resultado{totalCount === 1 ? '' : 's'}
+          </Text>
+        </Box>
+      )}
       <FlatList
         data={repos}
         renderItem={renderItem}

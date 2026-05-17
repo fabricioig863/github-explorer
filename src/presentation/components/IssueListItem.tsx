@@ -2,12 +2,12 @@ import { useTheme } from '@shopify/restyle';
 import { CircleDot } from 'lucide-react-native';
 
 import type { Issue } from '@/domain/entities/Issue';
-import type { Theme } from '@/infrastructure/theme/lightTheme';
 import { Badge } from '@/presentation/design-system/Badge';
 import { Card } from '@/presentation/design-system/Card';
 import { Box } from '@/presentation/design-system/primitives/Box';
 import { Text } from '@/presentation/design-system/primitives/Text';
 import { formatRelativeDate } from '@/presentation/utils/formatRelativeDate';
+import type { Theme } from 'src/infra/theme/lightTheme';
 
 interface IssueListItemProps {
   issue: Issue;

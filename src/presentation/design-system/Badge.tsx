@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
 
-import type { Theme } from '@/infrastructure/theme/lightTheme';
 import { Box } from '@/presentation/design-system/primitives/Box';
 import { Text } from '@/presentation/design-system/primitives/Text';
+import type { Theme } from 'src/infra/theme/lightTheme';
 
 type BadgeTone = 'neutral' | 'info' | 'success' | 'warning' | 'danger';
 

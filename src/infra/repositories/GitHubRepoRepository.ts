@@ -4,10 +4,10 @@ import type { PaginatedResult } from '@/domain/repositories/Pagination';
 import type {
   RepositoryDto,
   SearchRepositoriesResponseDto,
-} from '@/infrastructure/http/dtos/RepositoryDto';
-import { mapHttpError } from '@/infrastructure/http/errorMapper';
-import { httpClient } from '@/infrastructure/http/httpClient';
-import { mapRepository } from '@/infrastructure/http/mappers/repositoryMapper';
+} from 'src/infra/http/dtos/RepositoryDto';
+import { mapHttpError } from 'src/infra/http/errorMapper';
+import { httpClient } from 'src/infra/http/httpClient';
+import { mapRepository } from 'src/infra/http/mappers/repositoryMapper';
 
 function looksLikeRepoPath(q: string): boolean {
   const [owner, repo, extra] = q.split('/');

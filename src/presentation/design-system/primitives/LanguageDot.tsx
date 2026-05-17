@@ -1,6 +1,6 @@
-import { languageColorOrFallback } from '@/infrastructure/theme/languageColors';
 import { Box } from '@/presentation/design-system/primitives/Box';
 import { Text } from '@/presentation/design-system/primitives/Text';
+import { languageColorOrFallback } from 'src/infra/theme/languageColors';
 
 interface LanguageDotProps {
   language: string | null;

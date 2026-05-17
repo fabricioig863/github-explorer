@@ -4,7 +4,6 @@ import type { ReactNode } from 'react';
 import { ScrollView } from 'react-native';
 
 import type { Repository } from '@/domain/entities/Repository';
-import type { Theme } from '@/infrastructure/theme/lightTheme';
 import { EmptyState } from '@/presentation/components/EmptyState';
 import { Avatar } from '@/presentation/design-system/Avatar';
 import { Button } from '@/presentation/design-system/Button';
@@ -17,6 +16,7 @@ import { useOpenIssuesCount } from '@/presentation/hooks/useOpenIssuesCount';
 import { useRepoDetails } from '@/presentation/hooks/useRepoDetails';
 import type { ExploreStackScreenProps } from '@/presentation/navigation/types';
 import { getErrorMessage } from '@/presentation/utils/getErrorMessage';
+import type { Theme } from 'src/infra/theme/lightTheme';
 
 type Props = ExploreStackScreenProps<'RepoDetail'>;
 

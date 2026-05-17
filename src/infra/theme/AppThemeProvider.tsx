@@ -2,9 +2,9 @@ import { ThemeProvider as RestyleThemeProvider } from '@shopify/restyle';
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useColorScheme } from 'react-native';
 
-import { darkTheme } from '@/infrastructure/theme/darkTheme';
-import { lightTheme } from '@/infrastructure/theme/lightTheme';
-import { loadThemeMode, saveThemeMode, type ThemeMode } from '@/infrastructure/theme/themeStorage';
+import { darkTheme } from 'src/infra/theme/darkTheme';
+import { lightTheme } from 'src/infra/theme/lightTheme';
+import { loadThemeMode, saveThemeMode, type ThemeMode } from 'src/infra/theme/themeStorage';
 
 export interface ThemeModeContextValue {
   mode: ThemeMode;

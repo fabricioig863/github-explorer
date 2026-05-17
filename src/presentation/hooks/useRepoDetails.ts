@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 
-import { container } from '@/infrastructure/di/container';
+import { container } from 'src/infra/di/container';
 
 interface UseRepoDetailsParams {
   owner: string;
