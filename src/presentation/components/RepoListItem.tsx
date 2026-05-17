@@ -7,6 +7,7 @@ import { Card } from '@/presentation/design-system/Card';
 import { Box } from '@/presentation/design-system/primitives/Box';
 import { LanguageDot } from '@/presentation/design-system/primitives/LanguageDot';
 import { Text } from '@/presentation/design-system/primitives/Text';
+import { formatCount } from '@/presentation/utils/formatCount';
 import type { Theme } from 'src/infra/theme/lightTheme';
 
 interface RepoListItemProps {
@@ -52,8 +53,3 @@ export function RepoListItem({ repo, onPress }: RepoListItemProps) {
   );
 }
 
-function formatCount(count: number): string {
-  if (count < 1000) return String(count);
-  if (count < 10000) return `${(count / 1000).toFixed(1)}k`;
-  return `${Math.floor(count / 1000)}k`;
-}

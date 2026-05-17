@@ -1,20 +1,24 @@
 import { useTheme } from '@shopify/restyle';
-import { CircleDot, Eye, GitFork, Star } from 'lucide-react-native';
-import type { ReactNode } from 'react';
+import { CircleDot, FileCode, GitBranch, Scale } from 'lucide-react-native';
+import { useLayoutEffect, type ReactNode } from 'react';
 import { ScrollView } from 'react-native';
 
 import type { Repository } from '@/domain/entities/Repository';
+import { BookmarkButton } from '@/presentation/components/BookmarkButton';
 import { EmptyState } from '@/presentation/components/EmptyState';
-import { Avatar } from '@/presentation/design-system/Avatar';
+import { RateLimitBanner } from '@/presentation/components/RateLimitBanner';
 import { Button } from '@/presentation/design-system/Button';
-import { Card } from '@/presentation/design-system/Card';
+import { Skeleton } from '@/presentation/design-system/Skeleton';
 import { Box } from '@/presentation/design-system/primitives/Box';
 import { LanguageDot } from '@/presentation/design-system/primitives/LanguageDot';
-import { Spinner } from '@/presentation/design-system/primitives/Spinner';
 import { Text } from '@/presentation/design-system/primitives/Text';
+import { useIsRepoSaved } from '@/presentation/hooks/useIsRepoSaved';
 import { useOpenIssuesCount } from '@/presentation/hooks/useOpenIssuesCount';
 import { useRepoDetails } from '@/presentation/hooks/useRepoDetails';
+import { useToggleSaveRepo } from '@/presentation/hooks/useToggleSaveRepo';
 import type { ExploreStackScreenProps } from '@/presentation/navigation/types';
+import { formatCount } from '@/presentation/utils/formatCount';
+import { formatRelativeDate } from '@/presentation/utils/formatRelativeDate';
 import { getErrorMessage } from '@/presentation/utils/getErrorMessage';
 import type { Theme } from 'src/infra/theme/lightTheme';
 
@@ -22,21 +26,44 @@ type Props = ExploreStackScreenProps<'RepoDetail'>;
 
 export function RepoDetailScreen({ route, navigation }: Props) {
   const { owner, repo } = route.params;
-  const { data, isLoading, error } = useRepoDetails({ owner, repo });
+  const fullName = `${owner}/${repo}`;
+
+  const { data, isLoading, error, refetch } = useRepoDetails({ owner, repo });
   const { data: openIssuesCount } = useOpenIssuesCount({ owner, repo });
+  const { data: isSaved = false } = useIsRepoSaved(fullName);
+  const toggleSave = useToggleSaveRepo();
+
+  // Header right ganha BookmarkButton assim que o repo carrega.
+  // useLayoutEffect evita um flash em que o header renderiza sem o ícone.
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      title: 'Repositório',
+      headerRight: () =>
+        data === undefined ? null : (
+          <BookmarkButton
+            isSaved={isSaved}
+            disabled={toggleSave.isPending}
+            onPress={() => toggleSave.mutate({ repo: data, isCurrentlySaved: isSaved })}
+          />
+        ),
+    });
+  }, [navigation, data, isSaved, toggleSave]);
 
   if (isLoading) {
-    return (
-      <Box flex={1} backgroundColor="bg" alignItems="center" justifyContent="center">
-        <Spinner size="large" color="accent" />
-      </Box>
-    );
+    return <RepoDetailSkeleton />;
   }
 
   if (error !== null) {
     return (
       <Box flex={1} backgroundColor="bg">
-        <EmptyState title="Algo deu errado" description={getErrorMessage(error)} />
+        <RateLimitBanner error={error} />
+        <EmptyState
+          title="Algo deu errado"
+          description={getErrorMessage(error)}
+          onRetry={() => {
+            void refetch();
+          }}
+        />
       </Box>
     );
   }
@@ -51,14 +78,15 @@ export function RepoDetailScreen({ route, navigation }: Props) {
 
   return (
     <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }}>
-      <Box flex={1} backgroundColor="bg" padding="xxxl" gap="xxxl">
+      <Box flex={1} backgroundColor="bg" padding="huge" gap="huge">
         <RepoHero repo={data} />
         <StatsGrid repo={data} />
-        <RepoMeta repo={data} openIssuesCount={openIssuesCount} />
+        <RepoMeta repo={data} />
         <Button
-          variant="primary"
+          variant="outline"
           size="md"
           onPress={() => navigation.navigate('Issues', { owner, repo })}
+          leftIcon={<CircleDotIcon />}
         >
           {openIssuesCount === undefined
             ? 'Ver issues abertas'
@@ -69,111 +97,163 @@ export function RepoDetailScreen({ route, navigation }: Props) {
   );
 }
 
-interface RepoSectionProps {
-  repo: Repository;
+function CircleDotIcon() {
+  const theme = useTheme<Theme>();
+  return <CircleDot size={16} color={theme.colors.fg} />;
 }
 
-function RepoHero({ repo }: RepoSectionProps) {
+function RepoHero({ repo }: { repo: Repository }) {
   return (
-    <Box gap="md">
-      <Box flexDirection="row" alignItems="center" gap="md">
-        <Avatar uri={repo.owner.avatarUrl} login={repo.owner.login} size="lg" />
-        <Box flex={1} gap="xs">
-          <Text variant="bodySmall" color="fgMuted">
-            {repo.owner.login} · {repo.owner.type}
-          </Text>
-          <Text variant="h1">{repo.name}</Text>
-        </Box>
-      </Box>
+    <Box
+      padding="huge"
+      borderRadius="xxl"
+      backgroundColor="surfaceMuted"
+      borderColor="border"
+      borderWidth={1}
+      gap="md"
+    >
+      <Text variant="caption" color="fgMuted">
+        @{repo.owner.login} · {repo.owner.type}
+      </Text>
+      <Text variant="display">{repo.name}</Text>
       {repo.description !== null && (
         <Text variant="body" color="fgMuted">
           {repo.description}
         </Text>
       )}
+      {repo.topics.length > 0 && (
+        <Box flexDirection="row" flexWrap="wrap" gap="sm" marginTop="sm">
+          {repo.topics.slice(0, 5).map((topic) => (
+            <TopicPill key={topic} label={topic} />
+          ))}
+        </Box>
+      )}
     </Box>
   );
 }
 
-function StatsGrid({ repo }: RepoSectionProps) {
-  const theme = useTheme<Theme>();
+function TopicPill({ label }: { label: string }) {
+  return (
+    <Box
+      paddingHorizontal="md"
+      paddingVertical="xs"
+      borderRadius="sm"
+      backgroundColor="surface"
+      borderColor="border"
+      borderWidth={1}
+    >
+      <Text variant="mono" color="fgMuted">
+        {label}
+      </Text>
+    </Box>
+  );
+}
+
+function StatsGrid({ repo }: { repo: Repository }) {
   return (
     <Box flexDirection="row" gap="md">
-      <StatCard
-        icon={<Star size={16} color={theme.colors.fgMuted} />}
-        label="Estrelas"
-        value={formatCount(repo.stars)}
-      />
-      <StatCard
-        icon={<GitFork size={16} color={theme.colors.fgMuted} />}
-        label="Forks"
-        value={formatCount(repo.forks)}
-      />
-      <StatCard
-        icon={<Eye size={16} color={theme.colors.fgMuted} />}
-        label="Watchers"
-        value={formatCount(repo.watchers)}
-      />
+      <StatCard label="ESTRELAS" value={formatCount(repo.stars)} />
+      <StatCard label="FORKS" value={formatCount(repo.forks)} />
+      <StatCard label="WATCH" value={formatCount(repo.watchers)} />
     </Box>
   );
 }
 
-interface StatCardProps {
+function StatCard({ label, value }: { label: string; value: string }) {
+  return (
+    <Box
+      flex={1}
+      padding="huge"
+      borderRadius="xxl"
+      backgroundColor="surface"
+      borderColor="border"
+      borderWidth={1}
+      gap="md"
+    >
+      <Text variant="eyebrow">{label}</Text>
+      <Text variant="h1">{value}</Text>
+    </Box>
+  );
+}
+
+interface MetaRowProps {
   icon: ReactNode;
   label: string;
-  value: string;
+  value: ReactNode;
+  isLast?: boolean;
 }
 
-function StatCard({ icon, label, value }: StatCardProps) {
+function MetaRow({ icon, label, value, isLast = false }: MetaRowProps) {
   return (
-    <Box flex={1}>
-      <Card variant="flat">
-        <Box gap="xs" alignItems="center">
-          {icon}
-          <Text variant="h3">{value}</Text>
-          <Text variant="caption">{label}</Text>
-        </Box>
-      </Card>
+    <Box
+      flexDirection="row"
+      alignItems="center"
+      justifyContent="space-between"
+      paddingVertical="xl"
+      paddingHorizontal="huge"
+      borderBottomColor="border"
+      borderBottomWidth={isLast ? 0 : 1}
+    >
+      <Box flexDirection="row" alignItems="center" gap="md">
+        {icon}
+        <Text variant="bodySmall" color="fg" style={{ fontFamily: 'Geist_500Medium' }}>
+          {label}
+        </Text>
+      </Box>
+      {typeof value === 'string' ? (
+        <Text variant="bodySmall" color="fgMuted">
+          {value}
+        </Text>
+      ) : (
+        value
+      )}
     </Box>
   );
 }
 
-interface RepoMetaProps extends RepoSectionProps {
-  openIssuesCount: number | undefined;
-}
-
-function RepoMeta({ repo, openIssuesCount }: RepoMetaProps) {
+function RepoMeta({ repo }: { repo: Repository }) {
   const theme = useTheme<Theme>();
   return (
-    <Card variant="surface">
-      <Box gap="md">
-        <Box flexDirection="row" justifyContent="space-between" alignItems="center">
-          <Text variant="bodySmall" color="fgMuted">
-            Linguagem
-          </Text>
-          <LanguageDot language={repo.language} />
-        </Box>
-        <Box height={1} backgroundColor="border" />
-        <Box flexDirection="row" justifyContent="space-between" alignItems="center">
-          <Text variant="bodySmall" color="fgMuted">
-            Issues abertas
-          </Text>
-          <Box flexDirection="row" alignItems="center" gap="xs">
-            <CircleDot size={14} color={theme.colors.success} />
-            <Text variant="mono">{openIssuesCount ?? '—'}</Text>
-          </Box>
-        </Box>
-      </Box>
-    </Card>
+    <Box
+      borderRadius="xxl"
+      backgroundColor="surface"
+      borderColor="border"
+      borderWidth={1}
+      overflow="hidden"
+    >
+      <MetaRow
+        icon={<FileCode size={16} color={theme.colors.fgMuted} />}
+        label="Linguagem"
+        value={<LanguageDot language={repo.language} />}
+      />
+      <MetaRow
+        icon={<Scale size={16} color={theme.colors.fgMuted} />}
+        label="Licença"
+        value={repo.license ?? '—'}
+      />
+      <MetaRow
+        icon={<GitBranch size={16} color={theme.colors.fgMuted} />}
+        label="Último commit"
+        value={formatRelativeDate(repo.pushedAt)}
+        isLast
+      />
+    </Box>
   );
 }
 
-/**
- * Formata contagem grande: 120000 → 120k, 1500 → 1.5k.
- * Mesma função que RepoListItem usa — quando aparecer terceira ocorrência,
- * extrair pra presentation/utils/formatCount.ts.
- */
-function formatCount(count: number): string {
-  if (count < 1000) return String(count);
-  if (count < 10000) return `${(count / 1000).toFixed(1)}k`;
-  return `${Math.floor(count / 1000)}k`;
+function RepoDetailSkeleton() {
+  return (
+    <Box flex={1} backgroundColor="bg" padding="huge" gap="huge">
+      <Skeleton height={180} radius={16} />
+      <Box flexDirection="row" gap="md">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <Box key={i} flex={1}>
+            <Skeleton height={88} radius={16} />
+          </Box>
+        ))}
+      </Box>
+      <Skeleton height={170} radius={16} />
+      <Skeleton height={44} radius={8} />
+    </Box>
+  );
 }

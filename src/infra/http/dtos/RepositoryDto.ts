@@ -9,6 +9,11 @@ export interface OwnerDto {
   type: 'User' | 'Organization';
 }
 
+export interface LicenseDto {
+  name: string;
+  spdx_id: string | null;
+}
+
 export interface RepositoryDto {
   id: number;
   name: string;
@@ -22,6 +27,8 @@ export interface RepositoryDto {
   language: string | null;
   html_url: string;
   pushed_at: string;
+  topics?: string[];
+  license?: LicenseDto | null;
 }
 
 /**

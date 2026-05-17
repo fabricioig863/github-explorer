@@ -13,4 +13,6 @@ export interface Repository {
   language: string | null;
   htmlUrl: string;
   pushedAt: Date;
+  topics: string[];
+  license: string | null;
 }

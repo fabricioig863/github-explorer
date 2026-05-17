@@ -25,5 +25,7 @@ export function mapRepository(dto: RepositoryDto): Repository {
     language: dto.language,
     htmlUrl: dto.html_url,
     pushedAt: new Date(dto.pushed_at),
+    topics: dto.topics ?? [],
+    license: dto.license?.name ?? null,
   };
 }

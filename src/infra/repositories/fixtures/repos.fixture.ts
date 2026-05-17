@@ -19,6 +19,8 @@ export const REPOS_FIXTURE: Repository[] = [
     language: 'C++',
     htmlUrl: 'https://github.com/facebook/react-native',
     pushedAt: new Date('2025-05-10T14:22:00Z'),
+    topics: [],
+    license: null,
   },
   {
     id: 27193779,
@@ -38,6 +40,8 @@ export const REPOS_FIXTURE: Repository[] = [
     language: 'TypeScript',
     htmlUrl: 'https://github.com/expo/expo',
     pushedAt: new Date('2026-05-14T09:08:31Z'),
+    topics: [],
+    license: null,
   },
   {
     id: 70107786,
@@ -57,6 +61,8 @@ export const REPOS_FIXTURE: Repository[] = [
     language: 'JavaScript',
     htmlUrl: 'https://github.com/vercel/next.js',
     pushedAt: new Date('2026-05-15T18:42:11Z'),
+    topics: [],
+    license: null,
   },
   {
     id: 20929025,
@@ -76,6 +82,8 @@ export const REPOS_FIXTURE: Repository[] = [
     language: 'TypeScript',
     htmlUrl: 'https://github.com/microsoft/TypeScript',
     pushedAt: new Date('2026-05-13T22:17:09Z'),
+    topics: [],
+    license: null,
   },
   {
     id: 724712,
@@ -95,6 +103,8 @@ export const REPOS_FIXTURE: Repository[] = [
     language: 'Rust',
     htmlUrl: 'https://github.com/rust-lang/rust',
     pushedAt: new Date('2026-05-15T20:11:33Z'),
+    topics: [],
+    license: null,
   },
   {
     id: 11730342,
@@ -114,6 +124,8 @@ export const REPOS_FIXTURE: Repository[] = [
     language: 'TypeScript',
     htmlUrl: 'https://github.com/vuejs/vue',
     pushedAt: new Date('2025-12-01T11:22:00Z'),
+    topics: [],
+    license: null,
   },
   {
     id: 133442384,
@@ -133,6 +145,8 @@ export const REPOS_FIXTURE: Repository[] = [
     language: 'Rust',
     htmlUrl: 'https://github.com/denoland/deno',
     pushedAt: new Date('2026-05-14T16:00:42Z'),
+    topics: [],
+    license: null,
   },
   {
     id: 27193780,
@@ -152,6 +166,8 @@ export const REPOS_FIXTURE: Repository[] = [
     language: 'JavaScript',
     htmlUrl: 'https://github.com/nodejs/node',
     pushedAt: new Date('2026-05-15T05:34:12Z'),
+    topics: [],
+    license: null,
   },
   {
     id: 627691420,
@@ -171,6 +187,8 @@ export const REPOS_FIXTURE: Repository[] = [
     language: 'TypeScript',
     htmlUrl: 'https://github.com/shadcn-ui/ui',
     pushedAt: new Date('2026-05-13T12:00:00Z'),
+    topics: [],
+    license: null,
   },
   {
     id: 246840452,
@@ -190,6 +208,8 @@ export const REPOS_FIXTURE: Repository[] = [
     language: 'TypeScript',
     htmlUrl: 'https://github.com/tailwindlabs/tailwindcss',
     pushedAt: new Date('2026-05-12T17:45:00Z'),
+    topics: [],
+    license: null,
   },
   {
     id: 23096959,
@@ -209,6 +229,8 @@ export const REPOS_FIXTURE: Repository[] = [
     language: 'Go',
     htmlUrl: 'https://github.com/golang/go',
     pushedAt: new Date('2026-05-15T10:11:22Z'),
+    topics: [],
+    license: null,
   },
   {
     id: 21737465,
@@ -228,6 +250,8 @@ export const REPOS_FIXTURE: Repository[] = [
     language: 'Python',
     htmlUrl: 'https://github.com/python/cpython',
     pushedAt: new Date('2026-05-14T22:48:01Z'),
+    topics: [],
+    license: null,
   },
   {
     id: 44838949,
@@ -247,6 +271,8 @@ export const REPOS_FIXTURE: Repository[] = [
     language: 'Swift',
     htmlUrl: 'https://github.com/apple/swift',
     pushedAt: new Date('2026-05-13T07:21:09Z'),
+    topics: [],
+    license: null,
   },
   {
     id: 41464939,
@@ -266,6 +292,8 @@ export const REPOS_FIXTURE: Repository[] = [
     language: 'Kotlin',
     htmlUrl: 'https://github.com/JetBrains/kotlin',
     pushedAt: new Date('2026-05-09T15:30:00Z'),
+    topics: [],
+    license: null,
   },
   {
     id: 10270250,
@@ -285,6 +313,8 @@ export const REPOS_FIXTURE: Repository[] = [
     language: 'JavaScript',
     htmlUrl: 'https://github.com/facebook/react',
     pushedAt: new Date('2026-05-15T08:00:00Z'),
+    topics: [],
+    license: null,
   },
   {
     id: 80990894,
@@ -305,6 +335,8 @@ export const REPOS_FIXTURE: Repository[] = [
     language: 'TypeScript',
     htmlUrl: 'https://github.com/TanStack/query',
     pushedAt: new Date('2026-05-14T13:55:18Z'),
+    topics: [],
+    license: null,
   },
   {
     id: 161084816,
@@ -324,6 +356,8 @@ export const REPOS_FIXTURE: Repository[] = [
     language: 'TypeScript',
     htmlUrl: 'https://github.com/pmndrs/zustand',
     pushedAt: new Date('2026-05-08T19:12:44Z'),
+    topics: [],
+    license: null,
   },
   {
     id: 1899727,
@@ -343,6 +377,8 @@ export const REPOS_FIXTURE: Repository[] = [
     language: 'Dart',
     htmlUrl: 'https://github.com/flutter/flutter',
     pushedAt: new Date('2026-05-15T11:00:00Z'),
+    topics: [],
+    license: null,
   },
   {
     id: 39464018,
@@ -362,6 +398,8 @@ export const REPOS_FIXTURE: Repository[] = [
     language: 'TypeScript',
     htmlUrl: 'https://github.com/angular/angular',
     pushedAt: new Date('2026-05-14T17:23:00Z'),
+    topics: [],
+    license: null,
   },
   {
     id: 11248,
@@ -381,6 +419,8 @@ export const REPOS_FIXTURE: Repository[] = [
     language: 'C',
     htmlUrl: 'https://github.com/curl/curl',
     pushedAt: new Date('2026-05-13T04:18:55Z'),
+    topics: [],
+    license: null,
   },
   {
     id: 8514,
@@ -400,6 +440,8 @@ export const REPOS_FIXTURE: Repository[] = [
     language: 'Ruby',
     htmlUrl: 'https://github.com/rails/rails',
     pushedAt: new Date('2026-05-12T20:00:00Z'),
+    topics: [],
+    license: null,
   },
   {
     id: 6498492,
@@ -419,6 +461,8 @@ export const REPOS_FIXTURE: Repository[] = [
     language: 'PHP',
     htmlUrl: 'https://github.com/laravel/laravel',
     pushedAt: new Date('2026-05-10T08:34:00Z'),
+    topics: [],
+    license: null,
   },
   {
     id: 81654658,
@@ -438,6 +482,8 @@ export const REPOS_FIXTURE: Repository[] = [
     language: 'TypeScript',
     htmlUrl: 'https://github.com/expo/eas-cli',
     pushedAt: new Date('2026-05-14T14:11:00Z'),
+    topics: [],
+    license: null,
   },
   {
     id: 198447,
@@ -457,6 +503,8 @@ export const REPOS_FIXTURE: Repository[] = [
     language: null,
     htmlUrl: 'https://github.com/lonely-dev/cool-old-stuff',
     pushedAt: new Date('2019-08-22T03:15:00Z'),
+    topics: [],
+    license: null,
   },
   {
     id: 199001,
@@ -476,6 +524,8 @@ export const REPOS_FIXTURE: Repository[] = [
     language: 'Go',
     htmlUrl: 'https://github.com/maria-r/simple-cli',
     pushedAt: new Date('2024-02-14T19:00:00Z'),
+    topics: [],
+    license: null,
   },
   {
     id: 199002,
@@ -495,6 +545,8 @@ export const REPOS_FIXTURE: Repository[] = [
     language: 'TypeScript',
     htmlUrl: 'https://github.com/lucas-builds/reactive-bits',
     pushedAt: new Date('2025-09-30T12:00:00Z'),
+    topics: [],
+    license: null,
   },
   {
     id: 199003,
@@ -514,6 +566,8 @@ export const REPOS_FIXTURE: Repository[] = [
     language: 'Rust',
     htmlUrl: 'https://github.com/priya-r/rust-toy-db',
     pushedAt: new Date('2025-11-08T08:42:00Z'),
+    topics: [],
+    license: null,
   },
   {
     id: 199004,
@@ -533,6 +587,8 @@ export const REPOS_FIXTURE: Repository[] = [
     language: 'Swift',
     htmlUrl: 'https://github.com/sam-builds/swiftui-playground',
     pushedAt: new Date('2024-12-19T16:30:00Z'),
+    topics: [],
+    license: null,
   },
   {
     id: 199005,
@@ -552,6 +608,8 @@ export const REPOS_FIXTURE: Repository[] = [
     language: 'Kotlin',
     htmlUrl: 'https://github.com/yuki-eng/kotlin-coroutines-examples',
     pushedAt: new Date('2026-04-22T10:00:00Z'),
+    topics: [],
+    license: null,
   },
   {
     id: 199006,
@@ -571,5 +629,7 @@ export const REPOS_FIXTURE: Repository[] = [
     language: 'Go',
     htmlUrl: 'https://github.com/alex-codes/go-microservices-template',
     pushedAt: new Date('2026-03-11T14:00:00Z'),
+    topics: [],
+    license: null,
   },
 ];
