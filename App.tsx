@@ -1,4 +1,3 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
@@ -19,7 +18,6 @@ export default function App() {
     if (fontsLoaded || fontsError !== null) {
       void SplashScreen.hideAsync();
     }
-    void AsyncStorage.removeItem('@github-explorer:theme-mode');
   }, [fontsLoaded, fontsError]);
 
   if (!fontsLoaded && fontsError === null) {
