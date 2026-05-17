@@ -1,5 +1,34 @@
 # GitHub Explorer
 
+## Demonstração
+
+<!--
+  Para player garantido no GitHub web, faça upload do arquivo demo.mov
+  arrastando-o em qualquer issue/PR deste repositório. O GitHub gera
+  uma URL CDN no formato:
+
+    https://user-images.githubusercontent.com/<id>/<hash>.mov
+
+  Depois, substitua o atributo `src` da tag <video> abaixo por essa URL.
+-->
+
+<p align="center">
+  <video
+    src="./mockups/demo.mov"
+    controls
+    muted
+    playsinline
+    width="320">
+    Seu navegador não suporta vídeo HTML5. Baixe o arquivo:
+    <a href="./mockups/demo.mov">demo.mov</a>
+  </video>
+</p>
+
+> Caso o player não carregue diretamente no GitHub, clique em
+> [`mockups/demo.mov`](./mockups/demo.mov) para baixar e visualizar localmente.
+
+---
+
 Aplicativo React Native (Expo SDK 54, RN 0.81, TypeScript strict) que
 consome a API pública do GitHub para explorar repositórios, suas issues
 abertas e o perfil do usuário configurado. Foi construído como exercício
