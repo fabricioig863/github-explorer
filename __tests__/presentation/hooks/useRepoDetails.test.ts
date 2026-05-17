@@ -1,0 +1,56 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { renderHook, waitFor } from '@testing-library/react-native';
+import { createElement, type ReactNode } from 'react';
+
+jest.mock('src/infra/di/container', () => ({
+  container: {
+    searchReposUseCase: { execute: jest.fn() },
+    getRepoDetailsUseCase: { execute: jest.fn() },
+    listIssuesUseCase: { execute: jest.fn() },
+    countOpenIssuesUseCase: { execute: jest.fn() },
+    getUserProfileUseCase: { execute: jest.fn() },
+    getRecentCommitsUseCase: { execute: jest.fn() },
+  },
+}));
+
+import { useRepoDetails } from '@/presentation/hooks/useRepoDetails';
+import { container } from 'src/infra/di/container';
+
+import { makeRepository } from '../../test-utils/fixtures/repository.fixture';
+
+const executeMock = container.getRepoDetailsUseCase.execute as jest.Mock;
+
+function makeWrapper() {
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false, gcTime: 0, staleTime: 0 } },
+  });
+  return ({ children }: { children: ReactNode }) =>
+    createElement(QueryClientProvider, { client }, children);
+}
+
+describe('useRepoDetails', () => {
+  beforeEach(() => executeMock.mockReset());
+
+  it('is disabled when owner is empty', () => {
+    renderHook(() => useRepoDetails({ owner: '', repo: 'bar' }), { wrapper: makeWrapper() });
+    expect(executeMock).not.toHaveBeenCalled();
+  });
+
+  it('is disabled when repo is empty', () => {
+    renderHook(() => useRepoDetails({ owner: 'foo', repo: '' }), { wrapper: makeWrapper() });
+    expect(executeMock).not.toHaveBeenCalled();
+  });
+
+  it('returns repository data on success and calls execute with owner/repo', async () => {
+    const expected = makeRepository({ fullName: 'foo/bar' });
+    executeMock.mockResolvedValueOnce(expected);
+
+    const { result } = renderHook(() => useRepoDetails({ owner: 'foo', repo: 'bar' }), {
+      wrapper: makeWrapper(),
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(executeMock).toHaveBeenCalledWith({ owner: 'foo', repo: 'bar' });
+    expect(result.current.data).toBe(expected);
+  });
+});
