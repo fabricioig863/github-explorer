@@ -12,15 +12,21 @@
 Aplicativo mobile (Expo SDK 54 + React Native 0.81) que consome a API pública
 do GitHub para:
 
-1. Buscar repositórios por termo (com paginação e debounce).
-2. Ver detalhes de um repositório (estrelas, forks, watchers, linguagem).
-3. Listar issues abertas desse repositório (paginadas).
-4. Showcase do design system (todos os componentes + switch de tema).
+1. **Explorar** — buscar repositórios por termo (com paginação e debounce).
+2. **Detalhar** — ver estatísticas de um repositório (estrelas, forks,
+   watchers, linguagem, contagem real de issues abertas).
+3. **Issues** — listar issues abertas reais (sem misturar pull requests).
+4. **Perfil** — tela "Me" com avatar, bio, stats, contribuições e commits
+   recentes do usuário configurado em `EXPO_PUBLIC_PROFILE_USERNAME`.
 
 A meta arquitetural é separar o app em **quatro camadas concêntricas** seguindo
 Clean Architecture: `domain → application → infrastructure → presentation`.
 Cada camada só pode importar de camadas mais internas (regra travada por
 `eslint-plugin-boundaries`).
+
+> Nota de naming: a pasta `infrastructure/` foi renomeada para `infra/` (mesmo
+> conceito, menos digitação). O alias TypeScript `@/infrastructure/*` continua
+> mapeado, e parte dos imports já foi normalizada para `src/infra/...`.
 
 ---
 
@@ -39,7 +45,8 @@ Cada camada só pode importar de camadas mais internas (regra travada por
 | Ícones            | `lucide-react-native`               | SVG tree-shakeable, integra com `react-native-svg`                        |
 | Lint              | ESLint 9 flat config + `boundaries` | Enforcement de Clean Architecture em CI/IDE                               |
 | Testes            | Jest + `jest-expo` + RNTL           | Preset Expo já alinhado a SDK; React Native Testing Library para UI       |
-| Persistência leve | `AsyncStorage`                      | Theme mode preference                                                     |
+| Debug             | Reactotron                          | Painel de requests/state em dev                                           |
+| Persistência leve | `AsyncStorage`                      | Preferência de tema                                                       |
 
 ---
 
@@ -48,28 +55,35 @@ Cada camada só pode importar de camadas mais internas (regra travada por
 ```
 src/
 ├── domain/             # núcleo puro. Zero dependências externas.
-│   ├── entities/       # Repository, Issue, Owner, Label
-│   ├── repositories/   # contratos (interfaces) — IRepoRepository, IIssueRepository
+│   ├── entities/       # Repository, Issue, Owner, Label, UserProfile, RecentCommit
+│   ├── repositories/   # contratos: IRepoRepository, IIssueRepository, IUserRepository
 │   └── errors/         # DomainError + subclasses (RateLimit, NotFound, etc.)
 │
 ├── application/        # orquestra o domain. NUNCA conhece axios, RN, React.
-│   └── use-cases/      # SearchRepos, GetRepoDetails, ListIssues
+│   └── use-cases/      # SearchRepos, GetRepoDetails, ListIssues,
+│                       # CountOpenIssues, GetUserProfile, GetRecentCommits
 │
-├── infrastructure/     # adapters concretos. Pode importar domain + application.
+├── infra/              # adapters concretos. Pode importar domain + application.
 │   ├── http/           # axios client, mappers DTO→entity, error mapper
-│   ├── repositories/   # GitHubRepoRepository, GitHubIssueRepository, mocks
+│   │   ├── dtos/       # RepositoryDto, IssueDto, UserDto
+│   │   └── mappers/    # repositoryMapper, issueMapper, userMapper, eventMapper
+│   ├── repositories/   # GitHubRepoRepository, GitHubIssueRepository,
+│   │                   # GitHubUserRepository + 3 InMemory* + fixtures/
 │   ├── di/             # container — wire-up de dependências
 │   ├── theme/          # Restyle theme (light/dark, fonts, tokens)
 │   ├── query/          # QueryClient + QueryProvider (React Query)
 │   └── reactotron/     # Reactotron config (debug)
 │
 └── presentation/       # tudo o que o usuário vê. Pode importar todas as outras.
-    ├── navigation/     # RootNavigator, Tabs, Stacks
-    ├── screens/        # 4 telas: Search, RepoDetail, Issues, DesignSystem
+    ├── navigation/     # RootNavigator, TabsNavigator, ExploreStack
+    ├── screens/        # 4 telas: Search, RepoDetail, Issues, Profile
     ├── components/     # RepoListItem, IssueListItem, EmptyState
+    │   └── profile/    # AvatarRing, CommitList, ContribCard, ProfileHero, ThemeToggleButton
     ├── design-system/  # Button, Card, Input, Badge, Avatar, primitives
-    ├── hooks/          # useSearchRepos, useRepoDetails, useIssues, useDebounce
-    └── utils/          # getErrorMessage, formatRelativeDate
+    ├── hooks/          # useSearchRepos, useRepoDetails, useIssues,
+    │                   # useOpenIssuesCount, useProfileData, useRecentCommits,
+    │                   # useDebounce
+    └── utils/          # getErrorMessage, getEmptySearchCopy, formatRelativeDate
 ```
 
 A regra de ouro: **a seta da dependência aponta sempre para dentro**.
@@ -96,17 +110,23 @@ camada vai inteira.
   do GitHub).
 - `Issue.ts` — issue completa. `author` é `Pick<Owner, 'login' | 'avatarUrl'>`
   — só pega o que importa.
+- `UserProfile.ts` — perfil de usuário do GitHub para a tela Profile. Campos
+  como `bio`, `location`, `website` são `string | null` (ausência explícita).
+- `RecentCommit.ts` — commit individual extraído de PushEvent. Campos `sha`,
+  `message`, `repo`, `createdAt: Date`.
 
 > **Por que `interface` e não `class`?** Entidades são **dados**, não
 > comportamento. `interface` deixa claro que é forma, não objeto vivo.
 
 **Repositórios** (`src/domain/repositories/`):
 
-- `Pagination.ts` — tipo genérico `PaginatedResult<T>` reusado nos dois
-  contratos. Repare: `totalCount?` é opcional, porque nem todo endpoint da
-  GitHub devolve total (issues, por exemplo).
+- `Pagination.ts` — tipo genérico `PaginatedResult<T>` reusado nos contratos
+  paginados. `totalCount?` é **opcional**, porque nem todo endpoint da
+  GitHub devolve total.
 - `IRepoRepository.ts` — `search(params)` e `getDetails(owner, repo)`.
-- `IIssueRepository.ts` — `list(params)`.
+- `IIssueRepository.ts` — `list(params)` e `countOpen(params)`.
+- `IUserRepository.ts` — `getProfile(username)` e
+  `getRecentCommits(username, limit)`.
 
 **Erros** (`src/domain/errors/`):
 
@@ -148,7 +168,7 @@ async execute(input: SearchReposInput): Promise<PaginatedResult<Repository>> {
 }
 ```
 
-Repare em três coisas:
+Três pontos:
 
 1. **Sanitiza antes de validar.** `"  ab  "` vira `"ab"` antes da checagem de
    tamanho — o usuário não é punido por digitar espaço sem querer.
@@ -167,14 +187,31 @@ Trim em `owner` e `repo`, valida ambos não-vazios, chama
 
 Default `state ?? 'open'` e `perPage ?? 20`. Tudo no use case, nunca no hook.
 
+#### `CountOpenIssuesUseCase.ts`
+
+Valida owner/repo, delega para `issueRepository.countOpen`. Separado da
+listagem porque `RepoDetailScreen` só precisa do número — não da lista.
+
+#### `GetUserProfileUseCase.ts`
+
+Trim em `username`, valida não-vazio, delega para `userRepository.getProfile`.
+Usado pela tab Profile.
+
+#### `GetRecentCommitsUseCase.ts`
+
+Valida `username`, aceita `limit` opcional (default 10), delega para
+`userRepository.getRecentCommits`. A montagem da lista (filtrar PushEvent,
+extrair commits) acontece na infra — use case só pede e devolve.
+
 ---
 
 ### 4.3. Infrastructure (adapters concretos)
 
 **Conceito:** cola entre o mundo (HTTP, banco, disco) e o domain. **Toda
-dependência externa nasce aqui.**
+dependência externa nasce aqui.** A pasta é `src/infra/` (apelido curto da
+clássica `infrastructure/`).
 
-#### 4.3.1. HTTP layer (`src/infrastructure/http/`)
+#### 4.3.1. HTTP layer (`src/infra/http/`)
 
 ##### `httpClient.ts`
 
@@ -229,90 +266,93 @@ Pontos didáticos:
 - **Retorno `never`.** O TS entende que a função sempre lança. Caller fica
   `try { ... } catch (e) { mapHttpError(e); }` sem precisar de `return`.
 - **Rate limit detectado por dois caminhos.** Status 429 (abuse) OU status 403
-  com header `x-ratelimit-remaining=0` (limite primário). É como o GitHub
-  sinaliza.
+  com header `x-ratelimit-remaining=0` (limite primário).
 - **`parseResetAt`** lê `x-ratelimit-reset` (unix em segundos) e devolve
   `Date` — o erro carrega isso pra UI mostrar "tente em X minutos".
 
 ##### DTOs e mappers
 
-DTOs (`dtos/RepositoryDto.ts`, `dtos/IssueDto.ts`) modelam o shape **bruto** do
-GitHub: snake_case (`stargazers_count`, `created_at`), aninhamentos exatos.
+DTOs (`dtos/RepositoryDto.ts`, `dtos/IssueDto.ts`, `dtos/UserDto.ts`) modelam o
+shape **bruto** do GitHub: snake_case, aninhamentos exatos, tipos `Event`
+discriminados (PushEvent, IssuesEvent, etc.).
 
-Mappers (`mappers/repositoryMapper.ts`, `mappers/issueMapper.ts`) traduzem
-DTO → entity:
+Mappers (`mappers/`):
 
-```ts
-export function mapRepository(dto: RepositoryDto): Repository {
-  return {
-    id: dto.id,
-    name: dto.name,
-    fullName: dto.full_name,            // snake → camel
-    owner: mapOwner(dto.owner),
-    description: dto.description,
-    stars: dto.stargazers_count,        // renomeia vocabulário
-    forks: dto.forks_count,
-    watchers: dto.watchers_count,
-    openIssuesCount: dto.open_issues_count,
-    language: dto.language,
-    htmlUrl: dto.html_url,
-    pushedAt: new Date(dto.pushed_at),  // string ISO → Date
-  };
-}
-```
+- `repositoryMapper.ts` — `RepositoryDto → Repository` (renomeia stargazers
+  para stars, converte ISO string para Date).
+- `issueMapper.ts` — `IssueDto → Issue` (labels mapeados, `user` vira
+  `author`).
+- `userMapper.ts` — `UserDto → UserProfile`.
+- `eventMapper.ts` — filtra eventos `PushEvent` e extrai cada commit do
+  payload, montando `RecentCommit[]`. Eventos não-push são ignorados.
 
 Por que essa separação? **Trocar a API (REST → GraphQL, ou outro provedor)
 mexe só em DTO + mapper.** O domain não percebe.
 
-#### 4.3.2. Repositories (`src/infrastructure/repositories/`)
+#### 4.3.2. Repositories (`src/infra/repositories/`)
 
 ##### `GitHubRepoRepository.ts`
 
 Implementa `IRepoRepository` contra `/search/repositories` e
-`/repos/{owner}/{repo}`. Bloco-chave:
+`/repos/{owner}/{repo}`. Inclui o helper exportado `buildSearchQuery(rawQuery)`:
 
 ```ts
-async search({ query, page, perPage }) {
-  try {
-    const response = await httpClient.get<SearchRepositoriesResponseDto>(
-      '/search/repositories',
-      { params: { q: query, sort: 'stars', order: 'desc', page, per_page: perPage } },
-    );
-    const items = response.data.items.map(mapRepository);
-    const totalCount = response.data.total_count;
-    const hasNextPage = page * perPage < totalCount;
-    return { items, totalCount, hasNextPage };
-  } catch (err) {
-    mapHttpError(err);
+export function buildSearchQuery(rawQuery: string): string {
+  const trimmed = rawQuery.trim();
+  if (looksLikeRepoPath(trimmed)) {
+    return `repo:${trimmed}`;
   }
+  return `${trimmed} in:name,description`;
 }
 ```
 
-- `sort=stars&order=desc` é decisão de produto — vem aqui porque é forma do
-  request, não regra de domínio.
-- `hasNextPage = page * perPage < totalCount` é matemática simples: se a
-  página 8 com 20 itens chegaria em 160 mas o total é 150, não há próxima.
+Motivo: o `/search/repositories` por padrão faz match em `name`,
+`description` **e README**. README sozinho enchia a lista de ruído (digitar
+`openai-cookbook` trazia `huangjia2019/ai-agents` porque o README mencionava
+o termo). As regras:
+
+- Termo no formato `owner/repo` → `q=repo:owner/name`, retorno exato.
+- Demais casos → `q=<termo> in:name,description`, drop do README do escopo.
+
+Tudo na infra (decisão de forma de request). Use case só passa a string.
 
 ##### `GitHubIssueRepository.ts`
 
-Difere em duas coisas importantes:
+Duas diferenças importantes em relação à versão antiga:
 
-1. **API de issues NÃO devolve `total_count`.** Heurística:
-   `hasNextPage = response.data.length === perPage`. Página cheia =
-   provavelmente há mais. Documentado em comentário no arquivo.
-2. **API mistura PRs com issues** (decisão histórica do GitHub). Filtro em
-   runtime: `data.filter((dto) => !('pull_request' in dto))`.
+1. **`list()` agora chama `/search/issues`** com `q=repo:owner/name type:issue
+   state:<state>`. O endpoint `/repos/{owner}/{repo}/issues` era a opção
+   óbvia mas mistura issues e PRs e não oferece filtro — em repos com fluxo
+   alto de PRs (ex. `facebook/react-native`) a primeira página de 20 vinha
+   100% PR e o filtro client-side zerava a lista enquanto o badge mostrava
+   743 issues abertas.
+2. **`hasNextPage`** agora é matemático: `page * perPage < total_count`. A
+   heurística antiga (`length === perPage`) saiu.
 
-##### Mocks (`InMemoryRepoRepository.ts`, `InMemoryIssueRepository.ts`)
+`countOpen()` continua igual — `/search/issues` com `per_page=1` só pra ler
+o `total_count`.
 
-Implementam as mesmas interfaces com dados de fixture. Servem pra:
+##### `GitHubUserRepository.ts`
+
+Implementa `IUserRepository` em dois endpoints:
+
+- `getProfile(username)` → `GET /users/{username}` + `userMapper`.
+- `getRecentCommits(username, limit)` → `GET /users/{username}/events` +
+  `eventMapper` (que extrai commits de PushEvent até atingir `limit`).
+
+A API de eventos é pública (sem token) mas tem cache do GitHub de ~60s, por
+isso a tela Profile não precisa de polling agressivo.
+
+##### Mocks (`InMemoryRepoRepository.ts`, `InMemoryIssueRepository.ts`, `InMemoryUserRepository.ts`)
+
+Implementam as mesmas interfaces com dados de `fixtures/`. Servem pra:
 
 - Desenvolver UI sem queimar rate limit.
 - Testar telas com payload determinístico.
 - Provar que a abstração funciona (mesma tela, mesma renderização, dado
   diferente).
 
-#### 4.3.3. DI Container (`src/infrastructure/di/container.ts`)
+#### 4.3.3. DI Container (`src/infra/di/container.ts`)
 
 Único ponto do app que monta dependências:
 
@@ -327,14 +367,22 @@ function buildIssueRepository(): IIssueRepository {
   if (USE_MOCK) return new InMemoryIssueRepository();
   return new GitHubIssueRepository();
 }
+function buildUserRepository(): IUserRepository {
+  if (USE_MOCK) return new InMemoryUserRepository();
+  return new GitHubUserRepository();
+}
 
 const repoRepository = buildRepoRepository();
 const issueRepository = buildIssueRepository();
+const userRepository = buildUserRepository();
 
 export const container = {
   searchReposUseCase: new SearchReposUseCase(repoRepository),
   getRepoDetailsUseCase: new GetRepoDetailsUseCase(repoRepository),
   listIssuesUseCase: new ListIssuesUseCase(issueRepository),
+  countOpenIssuesUseCase: new CountOpenIssuesUseCase(issueRepository),
+  getUserProfileUseCase: new GetUserProfileUseCase(userRepository),
+  getRecentCommitsUseCase: new GetRecentCommitsUseCase(userRepository),
 } as const;
 ```
 
@@ -343,7 +391,7 @@ export const container = {
 - `as const` congela a forma do container (autocomplete tipado em quem
   consome).
 
-#### 4.3.4. Theme (`src/infrastructure/theme/`)
+#### 4.3.4. Theme (`src/infra/theme/`)
 
 - `lightTheme.ts` / `darkTheme.ts` — token-based via Restyle (colors, spacing,
   textVariants, buttonVariants).
@@ -354,11 +402,7 @@ export const container = {
 - `languageColors.ts` — mapa fixo nome-linguagem → cor (mesmo padrão do
   github/linguist).
 
-> Bug notório resolvido na etapa 6A: `app.json.userInterfaceStyle: "light"`
-> trava o `useColorScheme` em light. Trocado para `"automatic"`. Doc em
-> `docs/README.md` (seção Troubleshooting).
-
-#### 4.3.5. Query (`src/infrastructure/query/`)
+#### 4.3.5. Query (`src/infra/query/`)
 
 `queryClient.ts`:
 
@@ -389,6 +433,12 @@ export const queryClient = new QueryClient({
 - **`staleTime: 5min`** + **`gcTime: 30s`.** Cache acessível por 5 min sem
   refetch; coletado 30s após não ter consumer.
 
+#### 4.3.6. Reactotron (`src/infra/reactotron/`)
+
+`ReactotronConfig.ts` registra plugins de async-storage + networking + redux
+(via react-query devtools-like). Import lateral em `App.tsx` na primeira linha
+faz a conexão na inicialização do app em dev.
+
 ---
 
 ### 4.4. Presentation (UI)
@@ -396,12 +446,14 @@ export const queryClient = new QueryClient({
 #### 4.4.1. Navigation (`src/presentation/navigation/`)
 
 - `RootNavigator.tsx` — `NavigationContainer` + tema dinâmico (light/dark).
-- `TabsNavigator.tsx` — bottom tabs: **Explore** e **Design System**.
+- `TabsNavigator.tsx` — bottom tabs: **Explore** e **Me** (Profile).
 - `ExploreStack.tsx` — Search → RepoDetail → Issues.
-- `DesignSystemStack.tsx` — única tela DesignSystem (stack mantida pra header
-  consistente).
-- `types.ts` — tipos `ScreenProps` por stack, ligados em
-  `RootParamList`.
+- `types.ts` — tipos `ScreenProps` por stack (`ExploreStackScreenProps`,
+  `ProfileTabScreenProps`).
+
+ProfileTab é tela direta (sem stack interno) — não tem sub-rotas hoje. Se
+amanhã houver tela `EditProfile`, transforma em stack próprio sem mexer no
+resto.
 
 Detalhe técnico: `headerBackButtonDisplayMode: 'minimal'` (API nova v7;
 `headerBackTitleVisible` saiu).
@@ -434,9 +486,19 @@ export function useSearchRepos({ query }: UseSearchReposParams) {
   pra defesa em profundidade.
 - `getNextPageParam: undefined` faz `hasNextPage` virar `false` automático.
 
-##### `useRepoDetails.ts` / `useIssues.ts`
+##### `useRepoDetails.ts` / `useIssues.ts` / `useOpenIssuesCount.ts`
 
 Mesmo padrão. `useIssues` aceita `state` (default `'open'`).
+`useOpenIssuesCount` faz `useQuery` simples (sem paginação) com `staleTime`
+de 5 min — o número é estável o suficiente para não disparar refetch em todo
+mount.
+
+##### `useProfileData.ts` / `useRecentCommits.ts`
+
+Hooks da tela Profile. `useProfileData` busca o `UserProfile`;
+`useRecentCommits` busca a lista, com `limit=10` por padrão. Cada um tem
+queryKey próprio, então a tela pode renderizar parcialmente (hero antes da
+lista, por exemplo).
 
 ##### `useDebounce.ts`
 
@@ -449,6 +511,18 @@ no SearchScreen com 300ms.
 
 Função **pura** (sem hook, sem state). Casa `error instanceof X` e devolve
 string pt-BR. Pode ser chamada em qualquer lugar — render, callback, top-level.
+
+##### `getEmptySearchCopy.ts`
+
+Função pura que devolve `{ title, description }` para o `EmptyState` do
+SearchScreen, adaptando o texto ao formato do termo:
+
+- Termo no formato `owner/repo` → "Verifique se `<termo>` é owner/repositório
+  válido no GitHub.".
+- Demais casos → "Tente buscar com termos diferentes.".
+
+Duplica `looksLikeRepoPath` em relação à infra (`GitHubRepoRepository`) por
+decisão deliberada: três linhas puras não justificam um `src/shared/`.
 
 ##### `formatRelativeDate.ts`
 
@@ -472,19 +546,33 @@ troca futura.
   - `Card.tsx` — mesmo padrão (`CardBox`).
   - `Input.tsx`, `Badge.tsx`, `Avatar.tsx`.
 
-> Descoberta importante (etapa 6B): `createBox` cobre layout primitivo, mas
-> theme `variant` **só funciona** com `createRestyleComponent + createVariant`.
+> Descoberta importante: `createBox` cobre layout primitivo, mas theme
+> `variant` **só funciona** com `createRestyleComponent + createVariant`.
 
 #### 4.4.5. Components (`src/presentation/components/`)
+
+Componentes específicos de features:
 
 - `RepoListItem.tsx` — card de repo (Avatar, Star, LanguageDot, Fork).
 - `IssueListItem.tsx` — card de issue (título, badges de labels coloridos,
   número, data relativa).
-- `EmptyState.tsx` — estado vazio reusável.
+- `EmptyState.tsx` — estado vazio reusável (title, description, action).
+
+E o sub-pacote `profile/` para a tela Profile:
+
+- `ProfileHero.tsx` — bloco superior com avatar (via `AvatarRing`), nome,
+  bio, localização.
+- `AvatarRing.tsx` — avatar com anel de gradiente baseado no tema.
+- `ContribCard.tsx` — card de contribuições (stats followers / following /
+  repos públicos).
+- `CommitList.tsx` — lista de `RecentCommit` formatada (mensagem, repo, data
+  relativa).
+- `ThemeToggleButton.tsx` — botão de toggle light/dark conectado ao
+  `AppThemeProvider`.
 
 #### 4.4.6. Screens (`src/presentation/screens/`)
 
-Todas as 4 telas seguem o **mesmo pattern de state machine**:
+Todas as telas seguem o **mesmo pattern de state machine**:
 
 ```
 queryHasMinLength ? loading ? error ? empty ? lista
@@ -494,21 +582,28 @@ Cada return é mais específico que o seguinte. UX consistente: header fixo no
 topo + corpo variável.
 
 - **`SearchScreen.tsx`** — Input com debounce 300ms + FlatList infinita +
-  pull-to-refresh + 5 estados. Distingue `isFetching && !isFetchingNextPage`
-  (refresh do topo) de `isFetchingNextPage` (próxima página).
+  pull-to-refresh + 5 estados. EmptyState adapta texto via
+  `getEmptySearchCopy`. `onEndReachedThreshold=0.1` (era 0.5 — disparava em
+  cascata durante o layout inicial).
 - **`RepoDetailScreen.tsx`** — Hero (avatar/nome/desc) + StatsGrid (3 colunas
   flex=1) + RepoMeta + CTA pra Issues. ScrollView simples (conteúdo fixo).
-- **`IssuesScreen.tsx`** — FlatList paginada de issues abertas. Mesmo pattern
-  do SearchScreen.
-- **`DesignSystemScreen.tsx`** — Showcase com 9 seções (ThemeMode,
-  Typography, Buttons, Inputs, Badges, Cards, Avatars, Primitives,
-  ColorTokens). Switch primary/outline para alternar tema. Cor dos swatches
-  vem de `keyof Theme['colors']` — mexer no tema atualiza a showcase
-  automaticamente.
+- **`IssuesScreen.tsx`** — FlatList paginada de issues abertas reais (sem PRs)
+  consumindo `/search/issues`. Mesmo padrão do SearchScreen.
+- **`ProfileScreen.tsx`** — ScrollView com `ProfileHero`, `ContribCard`,
+  `CommitList` e `ThemeToggleButton`. Username vem de
+  `EXPO_PUBLIC_PROFILE_USERNAME` (fallback `octocat`).
+
+> A antiga `DesignSystemScreen` (showcase com 9 seções) foi removida — o
+> design system está estabilizado, e a tela só servia em fase de
+> desenvolvimento. Histórico em git.
 
 #### 4.4.7. App.tsx (entry point)
 
 ```tsx
+import 'src/infra/reactotron/ReactotronConfig';
+
+// ...
+
 return (
   <QueryProvider>
     <AppThemeProvider>
@@ -521,7 +616,9 @@ return (
 
 Ordem dos providers importa: **Query > Theme > Nav**. Qualquer hook em
 qualquer nível pode chamar `useQuery` sem se preocupar com mount order.
-Splash screen segura até as fontes carregarem (`useAppFonts`).
+Splash screen segura até as fontes carregarem (`useAppFonts`). O import
+lateral do Reactotron na primeira linha estabelece a conexão em dev sem
+poluir o tree de componentes.
 
 ---
 
@@ -535,6 +632,7 @@ pnpm install
 cp .env.example .env
 # editar EXPO_PUBLIC_USE_MOCK=false pra usar API real
 # editar EXPO_PUBLIC_GITHUB_TOKEN=<seu_PAT> pra subir rate limit pra 5000/h
+# editar EXPO_PUBLIC_PROFILE_USERNAME=<seu_login> pra personalizar tela Me
 
 # 3. rodar
 pnpm start          # Metro
@@ -544,106 +642,263 @@ pnpm android        # emulador Android
 # 4. validações
 pnpm typecheck      # tsc --noEmit (zero erros)
 pnpm lint           # eslint (zero errors, warnings aceitos)
-pnpm test           # jest
+pnpm test           # jest (ver pendência em §6.2.1)
 ```
 
 ---
 
 ## 6. O que falta para finalizar o projeto
 
-> Status corrigido após auditoria do código. O item "HTTP real" foi
-> **concluído na Etapa 12** (`GitHubRepoRepository` + `GitHubIssueRepository`
-> instanciados via `container.ts` quando `EXPO_PUBLIC_USE_MOCK=false`).
-
 ### 6.1. ✅ Já feito (resumo executivo)
 
 - [x] Bootstrap Expo SDK 54 + RN 0.81 + TS strict + path aliases
 - [x] ESLint flat + `boundaries` + `import` + resolver TypeScript
-- [x] Prettier + Jest + RNTL configurados
-- [x] **Domain completo** — entities, repository interfaces, errors
-- [x] **Application completa** — 3 use cases (Search, Detail, ListIssues)
+- [x] **Domain completo** — entities (Repository, Issue, UserProfile,
+      RecentCommit, Owner, Label), repository interfaces, errors
+- [x] **Application completa** — 6 use cases (Search, Detail, ListIssues,
+      CountOpenIssues, GetUserProfile, GetRecentCommits)
 - [x] **Infrastructure completa** — theme (light/dark), DI, http client,
-      error mapper, DTOs, mappers, mocks E implementação HTTP real
-- [x] **Presentation completa** — navigation, hooks React Query, design
-      system, 4 telas reais validadas visualmente (light + dark)
+      error mapper, DTOs, mappers (repo/issue/user/event), mocks E
+      implementações HTTP reais (Repo / Issue / User)
+- [x] **Presentation completa** — navigation (tabs Explore + Me), hooks
+      React Query, design system, 4 telas reais validadas visualmente em
+      light + dark
+- [x] Busca enriquecida (`in:name,description` + `repo:owner/name`)
+- [x] Issues via `/search/issues` (sem mistura com PRs)
+- [x] EmptyState que adapta texto ao formato do termo
 - [x] AsyncStorage persistindo theme mode
 - [x] Reactotron config
-- [x] `.env.example` documentado
-- [x] `AI_USAGE.md` com decisões por etapa
+- [x] `.env.example` documentado (incluindo `EXPO_PUBLIC_PROFILE_USERNAME`)
+- [x] Tela de Profile com hero, stats, lista de commits, toggle de tema
+- [x] Dois testes plantados (`getEmptySearchCopy`, `buildSearchQuery`) como
+      base para a próxima fase
 
 ### 6.2. ⏳ Pendente para fechar o projeto
 
-#### 6.2.1. Testes (CRÍTICO — pastas vazias)
+#### 6.2.1. Testes (foco principal) — Jest + React Native Testing Library
 
-`__tests__/{domain,application,presentation}` existem mas estão **vazias**.
-Precisa cobrir no mínimo:
+A meta é **cobertura máxima e bem feita**: testes unitários para tudo que é
+puro, integração para o que envolve UI + estado + container. Estratégia em
+pirâmide, do núcleo para a borda.
 
-- **Domain** (`__tests__/domain/`):
-  - `errors/DomainError.test.ts` — instancia subclasses, valida `code`,
-    valida `name`, valida herança.
-  - Opcional: validar shape de entities (em strict TS já é compile-time).
+##### Pré-requisito: destravar a infra do Jest
 
-- **Application** (`__tests__/application/`) — **maior valor de teste**:
-  - `SearchReposUseCase.test.ts` — sanitização de query, validação de
-    `< 2 chars`, default de `perPage`, propagação de erro do repo.
-  - `GetRepoDetailsUseCase.test.ts` — trim de owner/repo, erro em vazio.
-  - `ListIssuesUseCase.test.ts` — default de `state`, default de `perPage`.
-  - **Use repositórios fake** (objeto literal implementando a interface) —
-    não precisa de mock framework.
+Hoje `pnpm test` quebra com
+`TypeError: this._moduleMocker.clearMocksOnScope is not a function`. Causa:
+`jest-expo@55` (alinhado a `jest@29`) coexiste com `jest@30.4.2` no projeto,
+puxando duas versões de `jest-mock` (29.7.0 e 30.4.1). `jest-runtime@30` resolve
+o `jest-mock` errado.
 
-- **Presentation** (`__tests__/presentation/`):
-  - `utils/getErrorMessage.test.ts` — uma asserção por subtipo de erro.
-  - Opcional: `hooks/useDebounce.test.ts` com `jest.useFakeTimers`.
+Caminhos (escolher um):
 
-> Stack já está plugada (`jest-expo` + RNTL). Falta só escrever os arquivos.
+1. Bumpar `jest-expo` para `^56` (alinha a v30).
+2. Pinar `jest` em `^29` (downgrade, mais seguro pra preset Expo SDK 54).
+3. Forçar resolução de `jest-mock` para 30 via `pnpm.overrides` no
+   `package.json` raiz.
+
+Validar com `pnpm test` rodando os 2 suites já plantados.
+
+##### Domain (`__tests__/domain/`)
+
+- `errors/DomainError.test.ts` — instanciar cada subclasse, validar `code`
+  literal, `name`, `message`, herança de `Error`, preservação de stack.
+- `errors/RateLimitError.test.ts` — `resetAt` chega corretamente, mensagem
+  padrão pt-BR.
+- `errors/NotFoundError.test.ts` — contexto opcional aparece na mensagem.
+
+Coverage alvo: **100%** (superfície pequena).
+
+##### Application (`__tests__/application/`)
+
+Cada use case com um fake do repositório (objeto literal implementando a
+interface). Sem mock framework — fake explícito.
+
+- `SearchReposUseCase.test.ts`
+  - trim de query
+  - rejeição com `InvalidQueryError` quando length < 2
+  - default `perPage = 20`
+  - propagação de erro do repo
+  - happy path retornando `PaginatedResult`
+- `GetRepoDetailsUseCase.test.ts`
+  - trim owner/repo
+  - vazio → `InvalidQueryError`
+  - happy path
+- `ListIssuesUseCase.test.ts`
+  - default `state='open'`
+  - default `perPage=20`
+  - validação owner/repo
+- `CountOpenIssuesUseCase.test.ts` — validação + happy path
+- `GetUserProfileUseCase.test.ts` — trim, vazio → `InvalidQueryError`,
+  happy path
+- `GetRecentCommitsUseCase.test.ts` — validação, limit default, happy path
+
+Coverage alvo: **100%**. Aqui mora a regra de negócio — não cobrir é
+imperdoável.
+
+##### Infrastructure (`__tests__/infrastructure/`)
+
+- `http/errorMapper.test.ts` — para cada cenário, montar `AxiosError` à mão e
+  asserir o `DomainError` correto. Cenários: sem `response` (Network),
+  status 429 (RateLimit), 403 com header `x-ratelimit-remaining=0`
+  (RateLimit), 404 com contexto (NotFound), 500 (Unexpected), erro não-Axios
+  (Unexpected). Validar `resetAt` parseado de `x-ratelimit-reset`.
+- `http/mappers/repositoryMapper.test.ts` — DTO → Entity completo, conversão
+  de `pushed_at` para Date, `description: null` preservado.
+- `http/mappers/issueMapper.test.ts` — labels mapeados, `user` → `author`.
+- `http/mappers/userMapper.test.ts` — `UserDto → UserProfile`, campos
+  `null`-aware.
+- `http/mappers/eventMapper.test.ts` — filtragem de PushEvent, extração de
+  commits do payload, limit honrado, fallback se payload vazio.
+- `repositories/buildSearchQuery.test.ts` — **já existe** (3 cenários).
+  Considerar adicionar edge cases (string vazia, só espaços, só barras).
+
+Coverage alvo: mappers + buildSearchQuery **100%**, errorMapper **>= 90%**.
+
+Httpclient e os GitHub*Repository concretos ficam fora do unit-test
+direto — integração real (live API) é fluxo manual; mockar axios para isso
+gera teste frágil de implementação. A confiança vem do errorMapper +
+mappers cobertos.
+
+##### Presentation — utils (`__tests__/presentation/utils/`)
+
+- `getErrorMessage.test.ts` — uma asserção por subtipo de `DomainError`,
+  fallback para `unknown`.
+- `getEmptySearchCopy.test.ts` — **já existe** (5 cenários).
+- `formatRelativeDate.test.ts` — congelar `Date.now()` via fake timers,
+  asserir "há X minutos" / "há X dias" em pt-BR.
+
+##### Presentation — hooks (`__tests__/presentation/hooks/`)
+
+`renderHook` da `@testing-library/react-native` + `QueryClientProvider` de
+teste (`retry: false`, `gcTime: 0`).
+
+- `useDebounce.test.ts` — `jest.useFakeTimers`, value passa após delay;
+  mudanças rápidas resetam o timer; cleanup no unmount.
+- `useSearchRepos.test.ts` — mockar `container` via `jest.mock` para retornar
+  um fake do `searchReposUseCase`; asserir transição
+  loading → success → data; `enabled=false` quando query < 2 chars; segunda
+  página via `fetchNextPage`.
+- `useRepoDetails.test.ts`, `useIssues.test.ts`, `useOpenIssuesCount.test.ts`
+  — mesmo padrão.
+- `useProfileData.test.ts`, `useRecentCommits.test.ts` — idem com fakes do
+  `userRepository`.
+
+##### Presentation — components (`__tests__/presentation/components/`)
+
+RNTL render + `screen.getByText/Role`. Foco em interação, não snapshots
+gigantes.
+
+- `RepoListItem.test.tsx` — renderiza nome, stars formatadas, linguagem;
+  `onPress` é chamado ao tocar.
+- `IssueListItem.test.tsx` — título, badges de labels, número e data
+  formatada.
+- `EmptyState.test.tsx` — title sempre presente; description e action
+  opcionais.
+- `profile/AvatarRing.test.tsx` — uri renderizado, fallback quando ausente.
+- `profile/CommitList.test.tsx` — lista renderiza n items, vazio mostra
+  hint.
+- `profile/ContribCard.test.tsx` — números formatados (1.2k, etc.).
+- `profile/ProfileHero.test.tsx` — bio/location/website renderizam ou somem
+  quando `null`.
+- `profile/ThemeToggleButton.test.tsx` — toggle muda o mode no provider de
+  teste.
+
+##### Presentation — screens (integração) (`__tests__/presentation/screens/`)
+
+Mockar `container` por arquivo de teste com fakes determinísticos. Renderizar
+com providers compostos (helper `renderWithProviders` em
+`__tests__/test-utils/`).
+
+- `SearchScreen.test.tsx`
+  - digitar, debounce expira, lista renderiza
+  - termo `owner/repo` que retorna zero → EmptyState com texto path-aware
+  - termo simples zero → EmptyState com texto genérico
+  - erro propaga → EmptyState de erro com mensagem pt-BR
+- `RepoDetailScreen.test.tsx`
+  - stats renderizadas
+  - CTA "Ver N issues abertas" leva ao stack
+- `IssuesScreen.test.tsx`
+  - primeira página renderiza
+  - `onEndReached` chama `fetchNextPage` (simular via scroll)
+  - empty state quando não há issues
+- `ProfileScreen.test.tsx`
+  - hero + stats + commits renderizam
+  - toggle de tema disponível
+  - estado de loading inicial
+
+##### Test utilities (`__tests__/test-utils/`)
+
+- `renderWithProviders.tsx` — wrap em `QueryClientProvider`,
+  `AppThemeProvider`, `NavigationContainer` (com `MockedNavigator` se
+  necessário pra screens que usam `useNavigation`).
+- `fakes/FakeRepoRepository.ts`, `FakeIssueRepository.ts`,
+  `FakeUserRepository.ts` — impls minimalistas com método-spy.
+- Fixtures de domain (não DTO!) — `repository.fixture.ts`, etc. — em
+  formato já mapeado para usar nos testes de presentation.
+
+##### Configuração de coverage
+
+Atualizar `jest.config.js`:
+
+```js
+collectCoverageFrom: [
+  'src/domain/**/*.{ts,tsx}',
+  'src/application/**/*.{ts,tsx}',
+  'src/infra/**/*.{ts,tsx}',
+  'src/presentation/**/*.{ts,tsx}',
+  '!src/**/index.ts',
+  '!src/**/*.d.ts',
+],
+coverageThreshold: {
+  global: {
+    statements: 80,
+    branches: 75,
+    functions: 80,
+    lines: 80,
+  },
+  './src/domain/': { statements: 100, branches: 100, functions: 100, lines: 100 },
+  './src/application/': { statements: 100, branches: 95, functions: 100, lines: 100 },
+},
+```
+
+Rodar com `pnpm test:coverage` e auditar o report HTML.
+
+##### Alvos numéricos
+
+| Camada                     | Cobertura mínima | Foco principal                              |
+| -------------------------- | ---------------- | ------------------------------------------- |
+| domain                     | 100%             | erros + invariantes de tipo                 |
+| application                | 100%             | regra de negócio (sanitize/validate/default)|
+| infra (mappers + helpers)  | 100%             | tradução DTO ↔ Entity + buildSearchQuery    |
+| infra (errorMapper)        | ≥ 90%            | branches por status / shape                 |
+| presentation (utils)       | 100%             | funções puras                               |
+| presentation (hooks)       | ≥ 90%            | estados de query, paginação                 |
+| presentation (components)  | ≥ 80%            | render + interação                          |
+| presentation (screens)     | ≥ 70%            | integração com container mockado            |
+| **global**                 | ≥ 80%            | —                                           |
 
 #### 6.2.2. Polish de UX
 
-- **Estados extras** ainda ausentes:
-  - Skeleton loader (em vez de Spinner) durante isLoading inicial — mais
-    refinado em listas longas.
-  - Toast / banner pra `RateLimitError` mostrando `resetAt` formatado.
-  - Retry button explícito no estado de erro (hoje só pull-to-refresh).
-- **Animações** (opcional, se houver tempo):
-  - `LayoutAnimation` ou `react-native-reanimated` no aparecer/sumir de
-    items do FlatList.
-  - Transição suave entre Search → RepoDetail (já vem do native-stack,
-    talvez ajustar `animation: 'slide_from_right'`).
-- **Acessibilidade**:
-  - `accessibilityLabel` nos Pressables principais.
-  - Touch targets ≥ 44pt (auditoria visual no Inspector).
+- **Skeleton loader** durante `isLoading` inicial em listas longas (mais
+  refinado que Spinner).
+- **Toast / banner** para `RateLimitError` exibindo `resetAt` formatado.
+- **Retry button** explícito no estado de erro (hoje só pull-to-refresh).
+- **Acessibilidade**: `accessibilityLabel` nos Pressables principais; touch
+  targets ≥ 44pt; testar com VoiceOver.
 
-#### 6.2.3. README final
+#### 6.2.3. README na raiz
 
-`README.md` na raiz hoje é **placeholder**. Deve conter:
+`README.md` na raiz hoje é placeholder. Deve conter:
 
 - Descrição curta do projeto.
 - Screenshots (light + dark) das 4 telas.
-- Stack (link para `docs/PROJETO.md` para detalhes).
+- Stack resumida (link para `docs/PROJETO.md` para detalhes).
 - Como rodar (3 comandos).
 - Variáveis de ambiente.
-- Decisões arquiteturais resumidas (link para `docs/PROJETO.md` e
-  `docs/domain.md`).
+- Decisões arquiteturais resumidas (link para `docs/PROJETO.md`).
 - "O que faria diferente com mais tempo" — bullet list honesta.
 
-#### 6.2.4. Limpeza
-
-- **`mockups/`** — pasta com HTML standalone do Octolens. Não é consumida
-  por nenhum código de produção. Decisões:
-  - Opção A: deletar (ficou histórico no git).
-  - Opção B: mover para `docs/mockups/` se quiser manter como referência
-    visual.
-- **`AI_USAGE.md`** — hoje é cronológico (etapa 1, 2, 3...). Organizar:
-  - Seção "Decisões arquiteturais" no topo.
-  - Seção "Etapas" depois.
-  - Seção "Aprendizados / surpresas".
-- **`docs/README.md`** — desatualizado em alguns pontos (lista de "Próximos
-  passos" cita itens já feitos). Reorganizar pra ser doc de **setup**
-  apenas, com link pra `PROJETO.md` pro status completo.
-- **`docs/domain.md`** — bem escrito, manter. Atualizar a tabela de erros
-  para incluir `InvalidQueryError` (criada depois).
-
-#### 6.2.5. Migração técnica (deferred — registrado em `AI_USAGE.md`)
+#### 6.2.4. Migração técnica (deferred)
 
 - `eslint-plugin-boundaries` v5 → v6 (consolida regras em
   `boundaries/dependencies`). Hoje gera warnings de deprecation; funciona,
@@ -653,32 +908,50 @@ Precisa cobrir no mínimo:
 
 ## 7. Ordem sugerida para fechar
 
-1. **Testes de application** — maior valor pelo menor custo. ~1-2h.
-2. **README final na raiz** — porta de entrada do projeto. ~30min.
-3. **Limpeza de docs e mockups** — coerência geral. ~30min.
-4. **Polish de UX** (toast de erro, retry button) — refinamento. ~1h.
-5. **Migração eslint v6** (opcional) — só se sobrar tempo. ~1h.
+1. **Destravar Jest** (escolher caminho 1, 2 ou 3 da §6.2.1) — ~15 min.
+2. **Testes de domain + application** — maior valor pelo menor custo. ~2h.
+3. **Testes de infrastructure (mappers + errorMapper)** — protege contra
+   regressões de API. ~1h30.
+4. **Testes de presentation (utils + hooks)** — finos e rápidos. ~1h.
+5. **Testes de components + screens (integração com RNTL)** — ~2h.
+6. **README final na raiz** — porta de entrada do projeto. ~30 min.
+7. **Polish de UX** (toast de erro, skeleton, retry) — refinamento. ~1h30.
+8. **Migração eslint v6** (opcional) — só se sobrar tempo. ~1h.
 
-Soma ~4h. Tudo verificável via `pnpm typecheck && pnpm lint && pnpm test`.
+Soma ~10h. Cada etapa verificável via
+`pnpm typecheck && pnpm lint && pnpm test:coverage`.
 
 ---
 
 ## 8. Prova viva da Clean Architecture
 
-A coisa mais bonita do projeto: trocar mocks por HTTP real foi literalmente
-**duas linhas em `container.ts`**:
+A coisa mais bonita do projeto continua sendo a troca de mocks por HTTP real
+em um único ponto. Hoje a feature flag controla **três** repositórios sem
+qualquer mexida em UI, hook, use case ou entity:
 
-```diff
-- if (USE_MOCK) return new InMemoryRepoRepository();
-+ if (USE_MOCK) return new InMemoryRepoRepository();
-+ return new GitHubRepoRepository();
+```ts
+// src/infra/di/container.ts
+function buildRepoRepository(): IRepoRepository {
+  if (USE_MOCK) return new InMemoryRepoRepository();
+  return new GitHubRepoRepository();
+}
+function buildIssueRepository(): IIssueRepository {
+  if (USE_MOCK) return new InMemoryIssueRepository();
+  return new GitHubIssueRepository();
+}
+function buildUserRepository(): IUserRepository {
+  if (USE_MOCK) return new InMemoryUserRepository();
+  return new GitHubUserRepository();
+}
 ```
 
-Nenhuma tela mudou. Nenhum hook mudou. Nenhum use case mudou. Nenhum entity
-mudou. O git diff da etapa 12 fica 100% confinado em `src/infrastructure/**`.
+A feature Profile validou o desenho em uma nova vertical: novo entity, novo
+contrato no domain, nova impl na infra, novo use case, nova tela — zero
+acoplamento com features anteriores. Domain, application e presentation não
+precisaram conhecer nada do `userRepository` além da interface.
 
-Isso é o teste de fogo da abstração: se você consegue trocar o backend sem
-tocar em UI ou regra de negócio, a arquitetura está funcionando. Aqui está.
+Isso é o teste de fogo da abstração: se você consegue adicionar uma vertical
+inteira sem tocar nas existentes, a arquitetura está funcionando.
 
 ---
 
@@ -694,13 +967,9 @@ tocar em UI ou regra de negócio, a arquitetura está funcionando. Aqui está.
 
 ### 9.1. Responsabilidades (mapa mental)
 
-Pensa nisso como o "Login" do diagrama clássico de Clean Architecture, mas
-adaptado pro nosso domínio: **explorar repositórios do GitHub**. Cada folha é
-uma responsabilidade discreta que vive em UMA camada específica.
-
 ```mermaid
 mindmap
-  root((Explorar Repos))
+  root((GitHub Explorer))
     Apresentação
       Renderizar lista
       Estado UI: loading / error / empty / list
@@ -708,22 +977,26 @@ mindmap
       Pull-to-refresh
       Paginação infinita (scroll)
       Navegação Search → Detail → Issues
+      Tela Profile (avatar / stats / commits)
       Tema light / dark
     Regras de Negócio
       Sanitizar query (trim)
       Validar tamanho mínimo (≥ 2 chars)
       Default perPage = 20
       Default state issues = open
-      Ordenação stars desc
-    Estado e Cache
+      Default limit commits = 10
+    Cache e Estado
       Cache por queryKey
       Dedupe de requests
       Stale time 5 min
       Retry só em transientes
     Comunicação com API
-      HTTP GET /search/repositories
-      HTTP GET /repos/{owner}/{repo}
-      HTTP GET /repos/{owner}/{repo}/issues
+      Enrich q (in:name,description / repo:)
+      GET /search/repositories
+      GET /repos/{owner}/{repo}
+      GET /search/issues (sem PRs)
+      GET /users/{username}
+      GET /users/{username}/events
       Auth via Bearer token (opcional)
       Versão pinada da API (2022-11-28)
     Tratamento de Erros
@@ -735,32 +1008,27 @@ mindmap
       Mensagem pt-BR no UI
     Mock / Real
       Feature flag EXPO_PUBLIC_USE_MOCK
-      Mesma interface IRepoRepository
+      Mesmas interfaces (Repo / Issue / User)
       Fixtures determinísticas
 ```
 
 Cada folha mora exatamente em UM lugar:
 
-| Responsabilidade               | Camada            | Arquivo principal                        |
-| ------------------------------ | ----------------- | ---------------------------------------- |
-| Renderizar lista               | presentation      | `SearchScreen.tsx`                       |
-| Debounce                       | presentation/hook | `useDebounce.ts`                         |
-| Sanitizar + validar query      | application       | `SearchReposUseCase.ts`                  |
-| Default `perPage`              | application       | `SearchReposUseCase.ts`                  |
-| Ordenação stars desc           | infrastructure    | `GitHubRepoRepository.ts` (param HTTP)   |
-| Cache, retry, dedupe           | infrastructure/q  | `queryClient.ts`                         |
-| Map Axios → DomainError        | infrastructure    | `errorMapper.ts`                         |
-| Mensagem pt-BR                 | presentation/util | `getErrorMessage.ts`                     |
-| Mock vs HTTP real              | infrastructure/di | `container.ts`                           |
-
-Se algum item dessa tabela aparecer em outro lugar, vazou de camada — é o sinal
-pra refatorar.
+| Responsabilidade               | Camada            | Arquivo principal                         |
+| ------------------------------ | ----------------- | ----------------------------------------- |
+| Renderizar lista               | presentation      | `SearchScreen.tsx`                        |
+| Debounce                       | presentation/hook | `useDebounce.ts`                          |
+| Sanitizar + validar query      | application       | `SearchReposUseCase.ts`                   |
+| Default `perPage`              | application       | `SearchReposUseCase.ts`                   |
+| Enrich `q` (in:/repo:)         | infrastructure    | `GitHubRepoRepository.ts` (`buildSearchQuery`) |
+| Filtrar PRs                    | infrastructure    | `GitHubIssueRepository.ts` (endpoint `/search/issues`) |
+| Cache, retry, dedupe           | infrastructure/q  | `queryClient.ts`                          |
+| Map Axios → DomainError        | infrastructure    | `errorMapper.ts`                          |
+| Mensagem pt-BR                 | presentation/util | `getErrorMessage.ts`                      |
+| Copy do EmptyState             | presentation/util | `getEmptySearchCopy.ts`                   |
+| Mock vs HTTP real              | infrastructure/di | `container.ts`                            |
 
 ### 9.2. Arquitetura em camadas (módulos e dependências)
-
-Réplica do diagrama de baixo do print, adaptada à nossa stack. Setas apontam
-**para dentro** (na direção da dependência). Caixas tracejadas são interfaces
-do domain — quem implementa não é amarrado pelo nome, é amarrado pelo contrato.
 
 ```mermaid
 flowchart TB
@@ -772,82 +1040,93 @@ flowchart TB
     classDef external fill:#dddddd,stroke:#555,color:#000
     classDef pending fill:#fff3b0,stroke:#bb9900,color:#000,stroke-dasharray: 5 5
 
-    %% ─────────── External ───────────
+    %% External
     GH[(api.github.com)]:::external
     AX[axios]:::external
     RQ[TanStack Query v5]:::external
     AS[(AsyncStorage)]:::external
     NAV[React Navigation v7]:::external
 
-    %% ─────────── Domain ───────────
+    %% Domain
     subgraph Domain["DOMAIN (núcleo, zero deps externas)"]
         direction TB
-        ENT["Entities<br/>Repository · Issue · Owner · Label"]:::domain
-        IREPO[/"IRepoRepository<br/>(interface)"/]:::domain
-        IISSUE[/"IIssueRepository<br/>(interface)"/]:::domain
-        ERR["Errors<br/>DomainError · NetworkError · RateLimit ·<br/>NotFound · InvalidQuery · Unexpected"]:::domain
+        ENT["Entities<br/>Repository · Issue · Owner · Label ·<br/>UserProfile · RecentCommit"]:::domain
+        IREPO[/"IRepoRepository"/]:::domain
+        IISSUE[/"IIssueRepository"/]:::domain
+        IUSER[/"IUserRepository"/]:::domain
+        ERR["Errors<br/>DomainError · Network · RateLimit ·<br/>NotFound · InvalidQuery · Unexpected"]:::domain
         PAG["PaginatedResult&lt;T&gt;"]:::domain
     end
 
-    %% ─────────── Application ───────────
+    %% Application
     subgraph Application["APPLICATION (use cases)"]
         direction TB
         UC1["SearchReposUseCase"]:::app
         UC2["GetRepoDetailsUseCase"]:::app
         UC3["ListIssuesUseCase"]:::app
         UC4["CountOpenIssuesUseCase"]:::app
+        UC5["GetUserProfileUseCase"]:::app
+        UC6["GetRecentCommitsUseCase"]:::app
     end
 
-    %% ─────────── Infrastructure ───────────
-    subgraph Infrastructure["INFRASTRUCTURE (adapters)"]
+    %% Infrastructure
+    subgraph Infrastructure["INFRA (adapters) — src/infra/"]
         direction TB
-        HTTP["httpClient<br/>(axios singleton)"]:::infra
-        EMAP["errorMapper<br/>Axios → DomainError"]:::infra
-        DTO["DTOs<br/>RepositoryDto · IssueDto"]:::infra
-        MAP["Mappers<br/>DTO → entity"]:::infra
+        HTTP["httpClient (axios singleton)"]:::infra
+        EMAP["errorMapper"]:::infra
+        DTO["DTOs<br/>RepositoryDto · IssueDto · UserDto"]:::infra
+        MAP["Mappers<br/>repository · issue · user · event"]:::infra
+        BSQ["buildSearchQuery"]:::infra
         GHRR["GitHubRepoRepository"]:::infra
-        GHIR["GitHubIssueRepository"]:::infra
+        GHIR["GitHubIssueRepository<br/>(via /search/issues)"]:::infra
+        GHUR["GitHubUserRepository"]:::infra
         MOCKR["InMemoryRepoRepository"]:::infra
         MOCKI["InMemoryIssueRepository"]:::infra
-        QC["queryClient<br/>(staleTime / retry / gcTime)"]:::infra
+        MOCKU["InMemoryUserRepository"]:::infra
+        QC["queryClient"]:::infra
         QP["QueryProvider"]:::infra
-        THEME["Theme (Restyle)<br/>light/dark + tokens"]:::infra
-        THSTOR["themeStorage<br/>(AsyncStorage)"]:::infra
+        THEME["Theme (Restyle)"]:::infra
+        THSTOR["themeStorage"]:::infra
         FONTS["fonts (Geist)"]:::infra
         RTRON["Reactotron"]:::infra
     end
 
-    %% ─────────── Presentation ───────────
+    %% Presentation
     subgraph Presentation["PRESENTATION (UI)"]
         direction TB
         SC1["SearchScreen"]:::present
         SC2["RepoDetailScreen"]:::present
         SC3["IssuesScreen"]:::present
-        SC4["DesignSystemScreen"]:::present
+        SC4["ProfileScreen"]:::present
         H1["useSearchRepos"]:::present
         H2["useRepoDetails"]:::present
         H3["useIssues"]:::present
         H4["useOpenIssuesCount"]:::present
-        H5["useDebounce"]:::present
-        DS["Design System<br/>Button · Card · Input · Badge ·<br/>Avatar · Box · Text · Pill"]:::present
+        H5["useProfileData"]:::present
+        H6["useRecentCommits"]:::present
+        H7["useDebounce"]:::present
+        DS["Design System<br/>Button · Card · Input · Badge · Avatar"]:::present
         CMP["Components<br/>RepoListItem · IssueListItem · EmptyState"]:::present
-        UTIL["Utils<br/>getErrorMessage · formatRelativeDate"]:::present
-        NAVCFG["Navigation<br/>RootNavigator · Tabs · Stacks"]:::present
+        PCMP["Profile components<br/>AvatarRing · CommitList · ContribCard ·<br/>ProfileHero · ThemeToggleButton"]:::present
+        UTIL["Utils<br/>getErrorMessage · getEmptySearchCopy ·<br/>formatRelativeDate"]:::present
+        NAVCFG["Navigation<br/>RootNavigator · Tabs · ExploreStack"]:::present
     end
 
-    %% ─────────── Main / Composition Root ───────────
+    %% Main
     subgraph Main["MAIN (composition root)"]
         direction TB
         DI["container.ts<br/>flag EXPO_PUBLIC_USE_MOCK"]:::main
         APP["App.tsx<br/>QueryProvider › ThemeProvider › RootNavigator"]:::main
     end
 
-    %% ─────────── Pendente (futuro) ───────────
+    %% Pendente
     subgraph Pendente["A IMPLEMENTAR"]
         direction TB
-        T1["__tests__/domain<br/>DomainError"]:::pending
-        T2["__tests__/application<br/>SearchRepos · GetRepoDetails · ListIssues"]:::pending
-        T3["__tests__/presentation<br/>getErrorMessage · useDebounce"]:::pending
+        T1["__tests__/domain<br/>DomainError + subclasses"]:::pending
+        T2["__tests__/application<br/>6 use cases"]:::pending
+        T3["__tests__/infrastructure<br/>mappers · errorMapper · buildSearchQuery"]:::pending
+        T4["__tests__/presentation<br/>utils · hooks · components · screens"]:::pending
+        FIX["Destravar Jest<br/>(jest-expo bump / jest pin / pnpm.overrides)"]:::pending
         UX1["Toast / Banner<br/>RateLimitError + resetAt"]:::pending
         UX2["Skeleton loader"]:::pending
         UX3["Retry button explícito"]:::pending
@@ -856,28 +1135,37 @@ flowchart TB
         LINT["ESLint boundaries v5 → v6"]:::pending
     end
 
-    %% ─────────── Dependências (setas apontam para dentro) ───────────
-    %% application → domain
+    %% Dependências
     UC1 --> IREPO
-    UC1 --> ENT
-    UC1 --> ERR
     UC2 --> IREPO
-    UC2 --> ENT
     UC3 --> IISSUE
-    UC3 --> ENT
     UC4 --> IISSUE
+    UC5 --> IUSER
+    UC6 --> IUSER
+    UC1 --> ENT
+    UC2 --> ENT
+    UC3 --> ENT
+    UC4 --> ENT
+    UC5 --> ENT
+    UC6 --> ENT
 
-    %% infrastructure → domain + application
     GHRR -.implements.-> IREPO
     GHIR -.implements.-> IISSUE
+    GHUR -.implements.-> IUSER
     MOCKR -.implements.-> IREPO
     MOCKI -.implements.-> IISSUE
+    MOCKU -.implements.-> IUSER
+
     GHRR --> HTTP
     GHRR --> MAP
     GHRR --> EMAP
+    GHRR --> BSQ
     GHIR --> HTTP
     GHIR --> MAP
     GHIR --> EMAP
+    GHUR --> HTTP
+    GHUR --> MAP
+    GHUR --> EMAP
     MAP --> DTO
     MAP --> ENT
     EMAP --> ERR
@@ -888,90 +1176,76 @@ flowchart TB
     QP --> RQ
     THSTOR --> AS
 
-    %% presentation → application (via container) + infrastructure
     SC1 --> H1
     SC1 --> CMP
     SC1 --> DS
     SC1 --> UTIL
-    SC1 --> H5
+    SC1 --> H7
     SC2 --> H2
     SC2 --> H4
     SC2 --> DS
     SC3 --> H3
     SC3 --> CMP
     SC3 --> DS
+    SC4 --> H5
+    SC4 --> H6
+    SC4 --> PCMP
     SC4 --> DS
-    H1 --> RQ
-    H2 --> RQ
-    H3 --> RQ
-    H4 --> RQ
+
     H1 -.via container.-> UC1
     H2 -.via container.-> UC2
     H3 -.via container.-> UC3
     H4 -.via container.-> UC4
+    H5 -.via container.-> UC5
+    H6 -.via container.-> UC6
+
     UTIL --> ERR
     DS --> THEME
     NAVCFG --> NAV
 
-    %% main wire-up
     DI --> UC1
     DI --> UC2
     DI --> UC3
     DI --> UC4
+    DI --> UC5
+    DI --> UC6
     DI --> GHRR
     DI --> GHIR
+    DI --> GHUR
     DI --> MOCKR
     DI --> MOCKI
+    DI --> MOCKU
     APP --> QP
     APP --> THEME
     APP --> NAVCFG
     APP --> FONTS
     APP --> RTRON
 
-    %% pendente → onde vai conectar
+    %% Pendente → conexões
+    FIX -.destrava.-> T1
+    FIX -.destrava.-> T2
+    FIX -.destrava.-> T3
+    FIX -.destrava.-> T4
+    T1 -.cobre.-> ERR
     T2 -.cobre.-> UC1
     T2 -.cobre.-> UC2
     T2 -.cobre.-> UC3
-    T3 -.cobre.-> UTIL
-    T3 -.cobre.-> H5
-    T1 -.cobre.-> ERR
+    T2 -.cobre.-> UC4
+    T2 -.cobre.-> UC5
+    T2 -.cobre.-> UC6
+    T3 -.cobre.-> MAP
+    T3 -.cobre.-> EMAP
+    T3 -.cobre.-> BSQ
+    T4 -.cobre.-> UTIL
+    T4 -.cobre.-> H1
+    T4 -.cobre.-> SC1
+    T4 -.cobre.-> SC4
     UX1 -.consome.-> ERR
-    UX1 -.exibido em.-> SC1
     UX2 -.substitui Spinner em.-> SC1
     UX3 -.adicionado em.-> SC1
-    UX4 -.aplicado em.-> DS
 ```
 
-#### Leitura do diagrama (resumo das decisões)
-
-1. **Setas só apontam pra dentro.** Presentation conhece application;
-   application conhece domain; domain não conhece ninguém. Isso é o que
-   `eslint-plugin-boundaries` trava em CI.
-2. **Caixas tracejadas com `/.../`** são interfaces do domain. As setas
-   `-.implements.->` mostram que `GitHubRepoRepository` e
-   `InMemoryRepoRepository` cumprem o **mesmo contrato** — por isso o swap
-   mock ↔ real custa zero refactor.
-3. **`container.ts` é o único nó que conhece todos.** É o "Composition Root"
-   — onde os grafos de objetos são montados. Resto do app só conhece a
-   interface.
-4. **`QueryClient` mora em `infrastructure/query`**, não em presentation.
-   Razão: cache + retry policy é uma decisão de infraestrutura (como se fala
-   com o servidor), não de UI. UI só consome via hooks.
-5. **Hooks de presentation NÃO chamam axios diretamente.** A linha
-   `H1 -.via container.-> UC1` é o coração: o hook pede pro container, o
-   container devolve um use case, o use case usa a interface. Nenhuma tela
-   importa `httpClient` em lugar nenhum (grep prova).
-6. **Theme tem dois caminhos:** os componentes leem tokens via Restyle
-   (`DS --> THEME`), e o `themeStorage` persiste a preferência em
-   AsyncStorage. UI nunca toca AsyncStorage direto.
-7. **Caixas tracejadas amarelas (`A IMPLEMENTAR`)** mostram onde os
-   pendentes vão se plugar — sem nascer dependência reversa.
-
 ### 9.3. Fluxo ponta-a-ponta de uma busca
-
-"Usuário digita `r` no Input → o que acontece até a lista renderizar?" Resposta
-visual (cache miss; segunda digitação repetida é cache hit e o React Query
-retorna direto do client):
 
 ```mermaid
 sequenceDiagram
@@ -984,6 +1258,7 @@ sequenceDiagram
     participant CT as container
     participant UC as SearchReposUseCase
     participant RP as GitHubRepoRepository
+    participant BSQ as buildSearchQuery
     participant HT as httpClient (axios)
     participant API as api.github.com
     participant EM as errorMapper
@@ -1002,16 +1277,17 @@ sequenceDiagram
         CT->>UC: execute({ query, page:1, perPage:20 })
         UC->>UC: sanitize + validate (≥ 2)
         UC->>RP: search({ query, page, perPage })
-        RP->>HT: GET /search/repositories?q=react&sort=stars&...
-        HT->>API: HTTPS request (Bearer token opcional)
+        RP->>BSQ: buildSearchQuery("react")
+        BSQ-->>RP: "react in:name,description"
+        RP->>HT: GET /search/repositories?q=react+in:name,description&sort=stars&...
+        HT->>API: HTTPS request
         alt 200 OK
             API-->>HT: { items, total_count }
-            HT-->>RP: AxiosResponse<SearchRepositoriesResponseDto>
+            HT-->>RP: AxiosResponse
             RP->>MP: items.map(mapRepository)
-            MP-->>RP: Repository[] (DTO → entity)
+            MP-->>RP: Repository[]
             RP-->>UC: { items, totalCount, hasNextPage }
             UC-->>RQ: PaginatedResult<Repository>
-            RQ->>RQ: armazena no cache (staleTime 5min)
             RQ-->>HK: data, hasNextPage, isLoading=false
             HK-->>SS: data, fetchNextPage, ...
             SS-->>U: FlatList renderiza repos
@@ -1025,7 +1301,7 @@ sequenceDiagram
             RQ->>RQ: shouldRetry? (não em determinísticos)
             RQ-->>HK: error: DomainError
             HK-->>SS: error
-            SS-->>U: estado de erro (mensagem pt-BR via getErrorMessage)
+            SS-->>U: EmptyState com mensagem pt-BR via getErrorMessage
         end
     else cache hit
         RQ-->>HK: data do cache (sem network)
@@ -1039,45 +1315,47 @@ sequenceDiagram
 - **Debounce na presentation, validação na application.** O debounce é UX
   (não bater na API a cada keystroke); o `length ≥ 2` é regra de negócio
   (busca de 1 char é ruído). Duas camadas, duas razões — não duplicam.
-- **`queryKey` inclui o termo.** `['searchRepos', 'react']` ≠
-  `['searchRepos', 'redux']`. Cada termo tem cache próprio. Trocar de
-  volta pra `'react'` vira cache hit instantâneo (se dentro de 5 min).
+- **Enrich do `q` na infra.** A presentation só passa o termo. O
+  `buildSearchQuery` decide entre `repo:owner/name` e `<termo>
+  in:name,description`. Se um dia mudar pra GraphQL, a presentation nem
+  fica sabendo.
 - **Erro nunca atravessa camada cru.** O `AxiosError` morre no
   `errorMapper`; o que sobe é sempre um `DomainError` tipado. UI faz
   `instanceof` com segurança.
-- **O hook é fino de propósito.** `useSearchRepos` tem ~15 linhas e zero
-  regra. Toda a inteligência mora no use case — porque queremos que essa
-  regra seja testável **sem** montar um React tree.
 
 ### 9.4. Como esse mapa muda quando os pendentes entrarem
 
-| Pendente                       | Camada onde nasce      | Conecta com                                 |
-| ------------------------------ | ---------------------- | ------------------------------------------- |
-| Testes de use case             | `__tests__/application`| Fakes de `IRepoRepository`/`IIssueRepository`|
-| Testes de utils                | `__tests__/presentation`| `getErrorMessage`, `useDebounce`           |
-| Toast de RateLimit             | presentation/components | Consome `RateLimitError.resetAt`            |
-| Skeleton loader                | presentation/design-system | Substitui Spinner em `isLoading`         |
-| Retry button                   | presentation/screens   | Chama `refetch()` do hook                   |
-| README raiz                    | repo root              | Linka para `docs/PROJETO.md`                |
-| boundaries v5 → v6             | eslint config          | Não afeta runtime                           |
+| Pendente                       | Camada onde nasce          | Conecta com                                  |
+| ------------------------------ | -------------------------- | -------------------------------------------- |
+| Destravar Jest                 | tooling                    | habilita §6.2.1 inteira                      |
+| Testes de domain               | `__tests__/domain`         | erros e invariantes                          |
+| Testes de application          | `__tests__/application`    | Fakes de I*Repository                        |
+| Testes de infrastructure       | `__tests__/infrastructure` | mappers, errorMapper, buildSearchQuery       |
+| Testes de presentation         | `__tests__/presentation`   | utils, hooks, components, screens via RNTL   |
+| Toast de RateLimit             | presentation/components    | Consome `RateLimitError.resetAt`             |
+| Skeleton loader                | presentation/design-system | Substitui Spinner em `isLoading`             |
+| Retry button                   | presentation/screens       | Chama `refetch()` do hook                    |
+| README raiz                    | repo root                  | Linka para `docs/PROJETO.md`                 |
+| boundaries v5 → v6             | eslint config              | Não afeta runtime                            |
 
-Repare: **nenhum pendente nasce no domain**. Domain está fechado pra negócio
-atual. Isso é sinal saudável — a regra de negócio já está modelada; o que
-resta é cobertura de testes e refinamento de UX.
+Nenhum pendente nasce no domain. A regra de negócio já está modelada; o que
+resta é cobertura de testes, refinamento de UX e documentação de borda.
 
 ---
 
-## 10. Glossário rápido (para colar na cabeça)
+## 10. Glossário rápido
 
 | Termo                 | Em uma frase                                                                |
 | --------------------- | --------------------------------------------------------------------------- |
 | **Entity**            | Tipo do domínio, dado puro, sem comportamento (`Repository`, `Issue`).      |
 | **Use Case**          | Operação de negócio. Recebe interfaces, devolve entities ou lança `DomainError`. |
 | **Repository (iface)**| Contrato no domain dizendo "alguém sabe buscar X". Não diz como.            |
-| **Repository (impl)** | Classe na infrastructure que cumpre o contrato com axios, in-memory, etc.   |
+| **Repository (impl)** | Classe na infra que cumpre o contrato com axios, in-memory, etc.            |
 | **DTO**               | Shape **bruto** vindo da API (snake_case, ISO strings).                     |
 | **Mapper**            | Função pura DTO → Entity. Onde a tradução de vocabulário acontece.          |
 | **Composition Root**  | `container.ts` — único lugar que faz `new GitHubRepoRepository()`.          |
 | **QueryClient**       | Cache global do React Query. Define stale/retry/gc para toda query do app.  |
 | **queryKey**          | Identificador único da query no cache. Mudou → request novo; igual → reusa. |
 | **DomainError**       | Erro tipado que UI consegue tratar. Tudo que sobe pra cima é dessa família. |
+| **`buildSearchQuery`**| Helper na infra que monta o `q` do GitHub a partir de termo livre/path.     |
+| **RNTL**              | React Native Testing Library — render + interação focados em comportamento. |
