@@ -14,6 +14,7 @@ import { Text } from '@/presentation/design-system/primitives/Text';
 import { useDebounce } from '@/presentation/hooks/useDebounce';
 import { useSearchRepos } from '@/presentation/hooks/useSearchRepos';
 import type { ExploreStackScreenProps } from '@/presentation/navigation/types';
+import { getEmptySearchCopy } from '@/presentation/utils/getEmptySearchCopy';
 import { getErrorMessage } from '@/presentation/utils/getErrorMessage';
 
 type Props = ExploreStackScreenProps<'Search'>;
@@ -98,13 +99,11 @@ export function SearchScreen({ navigation }: Props) {
   }
 
   if (repos.length === 0) {
+    const { title, description } = getEmptySearchCopy(debouncedQuery);
     return (
       <Box flex={1} backgroundColor="bg">
         <SearchHeader query={query} onChangeQuery={setQuery} />
-        <EmptyState
-          title="Nenhum repositório encontrado"
-          description="Tente buscar com termos diferentes."
-        />
+        <EmptyState title={title} description={description} />
       </Box>
     );
   }
