@@ -2,30 +2,17 @@
 
 ## Demonstração
 
-<!--
-  Para player garantido no GitHub web, faça upload do arquivo demo.mov
-  arrastando-o em qualquer issue/PR deste repositório. O GitHub gera
-  uma URL CDN no formato:
-
-    https://user-images.githubusercontent.com/<id>/<hash>.mov
-
-  Depois, substitua o atributo `src` da tag <video> abaixo por essa URL.
--->
-
 <p align="center">
-  <video
-    src="./mockups/demo.mov"
-    controls
-    muted
-    playsinline
-    width="320">
-    Seu navegador não suporta vídeo HTML5. Baixe o arquivo:
-    <a href="./mockups/demo.mov">demo.mov</a>
-  </video>
+  <a href="./mockups/demo.mov" title="Clique para baixar a gravação completa (.mov)">
+    <img src="./mockups/demo-preview.png" alt="Preview da demo do GitHub Explorer" width="320" />
+  </a>
 </p>
 
-> Caso o player não carregue diretamente no GitHub, clique em
-> [`mockups/demo.mov`](./mockups/demo.mov) para baixar e visualizar localmente.
+> Clique no preview acima para baixar a gravação de tela completa
+> ([`mockups/demo.mov`](./mockups/demo.mov)). GitHub bloqueia a
+> reprodução inline de vídeos servidos a partir de arquivos do
+> próprio repositório (CSP), então o preview estático é o
+> compromisso mais portável.
 
 ---
 
