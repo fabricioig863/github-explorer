@@ -23,6 +23,7 @@ paginação infinita e tratamento tipado de erros.
 5. [Valor desse desenho no dia a dia](#5-valor-desse-desenho-no-dia-a-dia)
 6. [Como rodar](#6-como-rodar)
 7. [Scripts e thresholds](#7-scripts-e-thresholds)
+8. [O que faria diferente com mais tempo](#8-o-que-faria-diferente-com-mais-tempo)
 
 ---
 
@@ -451,5 +452,94 @@ Relatório HTML em `coverage/lcov-report/index.html` após
 | `pnpm lint`          | 0 errors, ~87 warnings (deprecation de boundaries v5→v6) |
 | `pnpm test`          | 38/38 suites, 171/171 testes                             |
 | `pnpm test:coverage` | Global ~92 %, domain 100 %, application 100 %            |
+
+---
+
+## 8. O que faria diferente com mais tempo
+
+O escopo atual prioriza arquitetura, qualidade de código e cobertura
+de testes unitários/integração. Com mais tempo, levaria o produto
+para o nível seguinte nas frentes abaixo:
+
+### 8.1. Autenticação OAuth (Google e Apple)
+
+Hoje o app consome apenas endpoints públicos com um PAT opcional
+embutido no bundle. Em produção, eu trocaria por um fluxo real de
+login social:
+
+- **Tela de Login** dedicada com botões "Continuar com Google" e
+  "Continuar com Apple" (este último obrigatório nas guidelines da
+  App Store quando há outros provedores).
+- Integração via `expo-auth-session` + `expo-apple-authentication`
+  com PKCE, sem client secret no bundle.
+- Sessão persistida em `expo-secure-store` (Keychain/Keystore), nunca
+  em `AsyncStorage`.
+- Refresh token rotativo e `axios` interceptor de 401 → refresh →
+  retry transparente.
+- Logout que invalida `queryClient` e limpa o secure store.
+- Nova camada `infra/auth/` com interface `IAuthRepository` no domain,
+  preservando a regra de dependência.
+
+### 8.2. Tela de Profile completa
+
+A aba "Me" hoje é read-only e usa um username fixo via env. Com login,
+ela vira hub do usuário autenticado:
+
+- **Histórico de commits** paginado com filtro por repositório, agrupado
+  por dia, com diff resumido (`+adds / -dels`) por commit.
+- **Edição de perfil**: nome, bio, location, company, blog — com
+  `PATCH /user` (requer scope `user`). Validação no use case
+  (`UpdateUserProfileUseCase`), feedback otimista no React Query.
+- **Estatísticas pessoais**: contribuições do ano (heatmap estilo
+  GitHub), top linguagens, streak.
+- **Repositórios próprios** com toggle público/privado.
+- **Configurações** in-app: tema (já existe), idioma (pt-BR/en),
+  preferências de cache, logout.
+- Upload de avatar via `expo-image-picker` + endpoint adequado.
+
+### 8.3. Testes End-to-End (Detox ou Maestro)
+
+A pirâmide hoje termina em screen-level com container mockado. Falta
+a ponta de cima: smoke real no device.
+
+- **Maestro** como primeira escolha — YAML declarativo, baixo
+  overhead de manutenção, roda em CI sem nativo built. Detox
+  entraria se precisássemos de hooks mais finos no bridge RN.
+- Fluxos cobertos no E2E:
+  - Login Google → ver perfil → logout.
+  - Buscar `react` → abrir detalhe → ver issues → voltar.
+  - Trocar tema → estado persiste após reload.
+  - Rate limit simulado → banner aparece com `resetAt`.
+  - Modo offline → estados de erro consistentes.
+- Pipeline: Maestro Cloud (ou self-hosted no GitHub Actions com
+  emulador) rodando contra build de staging com `EXPO_PUBLIC_USE_MOCK=true`
+  para isolar do rate limit.
+- Cobertura E2E não substitui unit/integration; complementa o topo
+  da pirâmide.
+
+### 8.4. Outras melhorias que entrariam no roadmap
+
+- **i18n** com `i18next` (hoje strings pt-BR estão hardcoded).
+- **Acessibilidade auditada**: labels, roles, contraste WCAG AA,
+  testes com TalkBack/VoiceOver.
+- **Observabilidade**: Sentry para crash reporting + breadcrumbs,
+  métricas de performance (`react-native-performance`).
+- **Feature flags** (PostHog ou Statsig) para rollout gradual de
+  Profile editing e auth.
+- **Cache offline real** com persister do React Query
+  (`@tanstack/query-async-storage-persister`) + estratégia
+  stale-while-revalidate por tela.
+- **CI completo**: workflow GitHub Actions com `typecheck`, `lint`,
+  `test:coverage`, build EAS preview por PR, comentário do Maestro
+  Cloud no PR.
+- **Detalhe de Issue** com markdown renderer (`react-native-markdown-display`),
+  comentários paginados, reactions.
+- **Deep linking** (`expo-router` ou config plugin) para abrir
+  `github-explorer://repo/facebook/react` direto.
+
+A ordem real seria: OAuth → secure storage → Profile editing →
+E2E cobrindo o fluxo autenticado → i18n → observabilidade → resto.
+Cada item respeita a arquitetura já estabelecida: contrato no
+domain, regra no application, adapter na infra, JSX na presentation.
 
 ---
