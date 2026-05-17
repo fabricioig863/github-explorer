@@ -14,19 +14,11 @@ export type ExploreStackParamList = {
 };
 
 /**
- * Stack interno da tab Design System.
- */
-export type DesignSystemStackParamList = {
-  DesignSystem: undefined;
-};
-
-/**
- * Tab Navigator. Cada tab é um stack — usamos NavigatorScreenParams
- * pra permitir deep linking e navigate cross-tab tipados.
+ * Tab Navigator. Profile é tab direta (sem stack próprio).
  */
 export type TabsParamList = {
   ExploreTab: NavigatorScreenParams<ExploreStackParamList>;
-  DesignSystemTab: NavigatorScreenParams<DesignSystemStackParamList>;
+  ProfileTab: undefined;
 };
 
 /**
@@ -38,11 +30,7 @@ export type ExploreStackScreenProps<T extends keyof ExploreStackParamList> = Com
   BottomTabScreenProps<TabsParamList>
 >;
 
-export type DesignSystemStackScreenProps<T extends keyof DesignSystemStackParamList> =
-  CompositeScreenProps<
-    NativeStackScreenProps<DesignSystemStackParamList, T>,
-    BottomTabScreenProps<TabsParamList>
-  >;
+export type ProfileTabScreenProps = BottomTabScreenProps<TabsParamList, 'ProfileTab'>;
 
 /**
  * Augmentation global: useNavigation() fica tipado em toda tela sem

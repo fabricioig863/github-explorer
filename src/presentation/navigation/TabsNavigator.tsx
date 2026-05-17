@@ -1,11 +1,11 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useTheme } from '@shopify/restyle';
-import { Compass, Palette } from 'lucide-react-native';
+import { Compass, User } from 'lucide-react-native';
 
-import type { Theme } from '@/infrastructure/theme/lightTheme';
-import { DesignSystemStack } from '@/presentation/navigation/DesignSystemStack';
 import { ExploreStack } from '@/presentation/navigation/ExploreStack';
 import type { TabsParamList } from '@/presentation/navigation/types';
+import { ProfileScreen } from '@/presentation/screens/ProfileScreen';
+import type { Theme } from 'src/infra/theme/lightTheme';
 
 const Tabs = createBottomTabNavigator<TabsParamList>();
 
@@ -38,11 +38,13 @@ export function TabsNavigator() {
         }}
       />
       <Tabs.Screen
-        name="DesignSystemTab"
-        component={DesignSystemStack}
+        name="ProfileTab"
+        component={ProfileScreen}
         options={{
-          title: 'Design System',
-          tabBarIcon: ({ color }) => <Palette size={22} color={color} />,
+          title: 'Me',
+          tabBarIcon: ({ color, focused }) => (
+            <User size={22} color={color} fill={focused ? color : 'transparent'} />
+          ),
         }}
       />
     </Tabs.Navigator>
