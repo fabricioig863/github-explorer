@@ -1,8 +1,8 @@
-# GitHub Explorer
-
 <p align="center">
-  <img src="./docs/assets/Captura de Tela 2026-05-17 às 19.50.15.png" alt="GitHub Explorer rodando em iOS (tema claro) e Android (tema escuro)" width="700" />
+  <img src="./assets/app-preview.png" alt="GitHub Explorer rodando em iOS (tema claro) e Android (tema escuro)" width="700" />
 </p>
+
+# GitHub Explorer
 
 Aplicativo React Native (Expo SDK 54, RN 0.81, TypeScript strict) que
 consome a API pública do GitHub para explorar repositórios, suas issues
