@@ -101,7 +101,7 @@ export function IssuesScreen({ route }: Props) {
             void fetchNextPage();
           }
         }}
-        onEndReachedThreshold={0.5}
+        onEndReachedThreshold={0.1}
         refreshControl={
           <RefreshControl
             refreshing={isFetching && !isFetchingNextPage}
