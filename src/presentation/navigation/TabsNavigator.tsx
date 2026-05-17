@@ -1,10 +1,10 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useTheme } from '@shopify/restyle';
-import { Compass, User } from 'lucide-react-native';
+import { Bookmark, Compass } from 'lucide-react-native';
 
 import { ExploreStack } from '@/presentation/navigation/ExploreStack';
 import type { TabsParamList } from '@/presentation/navigation/types';
-import { ProfileScreen } from '@/presentation/screens/ProfileScreen';
+import { SavedScreen } from '@/presentation/screens/SavedScreen';
 import type { Theme } from 'src/infra/theme/lightTheme';
 
 const Tabs = createBottomTabNavigator<TabsParamList>();
@@ -36,14 +36,23 @@ export function TabsNavigator() {
           title: 'Explorar',
           tabBarIcon: ({ color }) => <Compass size={22} color={color} />,
         }}
+        listeners={({ navigation }) => ({
+          // Tocar no tab Explorar sempre volta pra Search.
+          // Sem isto, React Navigation preserva a route ativa do stack:
+          // após visitar Issues e ir pra Saved, voltar ao tab Explorar
+          // re-renderiza Issues, não Search.
+          tabPress: () => {
+            navigation.navigate('ExploreTab', { screen: 'Search' });
+          },
+        })}
       />
       <Tabs.Screen
-        name="ProfileTab"
-        component={ProfileScreen}
+        name="SavedTab"
+        component={SavedScreen}
         options={{
-          title: 'Me',
+          title: 'Salvos',
           tabBarIcon: ({ color, focused }) => (
-            <User size={22} color={color} fill={focused ? color : 'transparent'} />
+            <Bookmark size={22} color={color} fill={focused ? color : 'transparent'} />
           ),
         }}
       />

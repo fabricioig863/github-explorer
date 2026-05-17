@@ -14,11 +14,11 @@ export type ExploreStackParamList = {
 };
 
 /**
- * Tab Navigator. Profile é tab direta (sem stack próprio).
+ * Tab Navigator. SavedTab é tab direta (sem stack próprio).
  */
 export type TabsParamList = {
   ExploreTab: NavigatorScreenParams<ExploreStackParamList>;
-  ProfileTab: undefined;
+  SavedTab: undefined;
 };
 
 /**
@@ -30,7 +30,15 @@ export type ExploreStackScreenProps<T extends keyof ExploreStackParamList> = Com
   BottomTabScreenProps<TabsParamList>
 >;
 
-export type ProfileTabScreenProps = BottomTabScreenProps<TabsParamList, 'ProfileTab'>;
+/**
+ * SavedScreen renderiza dentro do Tabs.Navigator e precisa navegar para
+ * o stack Explorar (ao abrir um repo salvo). CompositeScreenProps dá
+ * type-safety dessa navegação cruzando tab.
+ */
+export type ProfileTabScreenProps = CompositeScreenProps<
+  BottomTabScreenProps<TabsParamList, 'SavedTab'>,
+  NativeStackScreenProps<ExploreStackParamList>
+>;
 
 /**
  * Augmentation global: useNavigation() fica tipado em toda tela sem
