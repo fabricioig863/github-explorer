@@ -22,11 +22,13 @@ export function RepoListItem({ repo, onPress }: RepoListItemProps) {
     <Card variant="surface" onPress={onPress}>
       <Box flexDirection="row" gap="md">
         <Avatar uri={repo.owner.avatarUrl} login={repo.owner.login} size="md" />
-        <Box flex={1} gap="xs">
-          <Text variant="bodySmall" color="fgMuted">
+        <Box flex={1} gap="xs" style={{ minWidth: 0 }}>
+          <Text variant="bodySmall" color="fgMuted" numberOfLines={1}>
             {repo.owner.login}
           </Text>
-          <Text variant="h3">{repo.name}</Text>
+          <Text variant="h3" numberOfLines={1} ellipsizeMode="tail">
+            {repo.name}
+          </Text>
           {repo.description !== null && (
             <Text variant="bodySmall" color="fgMuted" numberOfLines={2}>
               {repo.description}

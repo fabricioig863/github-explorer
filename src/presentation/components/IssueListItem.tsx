@@ -22,8 +22,10 @@ export function IssueListItem({ issue }: IssueListItemProps) {
         <Box paddingTop="xs">
           <CircleDot size={16} color={theme.colors.success} />
         </Box>
-        <Box flex={1} gap="sm">
-          <Text variant="body">{issue.title}</Text>
+        <Box flex={1} gap="sm" style={{ minWidth: 0 }}>
+          <Text variant="body" numberOfLines={2} ellipsizeMode="tail">
+            {issue.title}
+          </Text>
 
           {issue.labels.length > 0 && (
             <Box flexDirection="row" flexWrap="wrap" gap="sm">
