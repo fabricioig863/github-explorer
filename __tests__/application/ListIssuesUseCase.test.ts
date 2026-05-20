@@ -1,79 +1,142 @@
 import { ListIssuesUseCase } from '@/application/use-cases/ListIssuesUseCase';
 import { InvalidQueryError } from '@/domain/errors/InvalidQueryError';
+import { NetworkError } from '@/domain/errors/NetworkError';
+import { NotFoundError } from '@/domain/errors/NotFoundError';
 import { RateLimitError } from '@/domain/errors/RateLimitError';
 
 import { FakeIssueRepository } from '../test-utils/fakes/FakeIssueRepository';
 import { makeIssue } from '../test-utils/fixtures/issue.fixture';
 
 describe('ListIssuesUseCase', () => {
-  it('trims owner/repo and applies default state=open and perPage=20', async () => {
-    const repo = new FakeIssueRepository();
-    const useCase = new ListIssuesUseCase(repo);
+  describe('sanitização', () => {
+    it('trim owner e repo antes de delegar', async () => {
+      const repo = new FakeIssueRepository();
+      const useCase = new ListIssuesUseCase(repo);
 
-    await useCase.execute({ owner: '  foo  ', repo: '  bar  ', page: 1 });
+      await useCase.execute({ owner: '  foo  ', repo: '  bar  ', page: 1 });
 
-    expect(repo.list).toHaveBeenCalledWith({
-      owner: 'foo',
-      repo: 'bar',
-      state: 'open',
-      page: 1,
-      perPage: 20,
+      expect(repo.list).toHaveBeenCalledWith(
+        expect.objectContaining({ owner: 'foo', repo: 'bar' }),
+      );
     });
   });
 
-  it('forwards state=closed when provided', async () => {
-    const repo = new FakeIssueRepository();
-    const useCase = new ListIssuesUseCase(repo);
+  describe('validação', () => {
+    it('rejeita owner vazio (whitespace) e não chama o repo', async () => {
+      const repo = new FakeIssueRepository();
+      const useCase = new ListIssuesUseCase(repo);
 
-    await useCase.execute({ owner: 'foo', repo: 'bar', state: 'closed', page: 1 });
+      await expect(useCase.execute({ owner: ' ', repo: 'bar', page: 1 })).rejects.toBeInstanceOf(
+        InvalidQueryError,
+      );
+      expect(repo.list).not.toHaveBeenCalled();
+    });
 
-    expect(repo.list).toHaveBeenCalledWith(expect.objectContaining({ state: 'closed' }));
+    it('rejeita repo vazio e não chama o repo', async () => {
+      const repo = new FakeIssueRepository();
+      const useCase = new ListIssuesUseCase(repo);
+
+      await expect(useCase.execute({ owner: 'foo', repo: '', page: 1 })).rejects.toBeInstanceOf(
+        InvalidQueryError,
+      );
+      expect(repo.list).not.toHaveBeenCalled();
+    });
   });
 
-  it('forwards custom perPage when provided', async () => {
-    const repo = new FakeIssueRepository();
-    const useCase = new ListIssuesUseCase(repo);
+  describe('defaults de regra de negócio', () => {
+    it("state padrão = 'open' quando ausente", async () => {
+      const repo = new FakeIssueRepository();
+      const useCase = new ListIssuesUseCase(repo);
 
-    await useCase.execute({ owner: 'foo', repo: 'bar', page: 1, perPage: 50 });
+      await useCase.execute({ owner: 'foo', repo: 'bar', page: 1 });
 
-    expect(repo.list).toHaveBeenCalledWith(expect.objectContaining({ perPage: 50 }));
+      expect(repo.list).toHaveBeenCalledWith(expect.objectContaining({ state: 'open' }));
+    });
+
+    it("encaminha state='closed' quando fornecido", async () => {
+      const repo = new FakeIssueRepository();
+      const useCase = new ListIssuesUseCase(repo);
+
+      await useCase.execute({ owner: 'foo', repo: 'bar', state: 'closed', page: 1 });
+
+      expect(repo.list).toHaveBeenCalledWith(expect.objectContaining({ state: 'closed' }));
+    });
+
+    it('perPage padrão = 20 quando ausente', async () => {
+      const repo = new FakeIssueRepository();
+      const useCase = new ListIssuesUseCase(repo);
+
+      await useCase.execute({ owner: 'foo', repo: 'bar', page: 1 });
+
+      expect(repo.list).toHaveBeenCalledWith(expect.objectContaining({ perPage: 20 }));
+    });
+
+    it('encaminha perPage customizado', async () => {
+      const repo = new FakeIssueRepository();
+      const useCase = new ListIssuesUseCase(repo);
+
+      await useCase.execute({ owner: 'foo', repo: 'bar', page: 1, perPage: 50 });
+
+      expect(repo.list).toHaveBeenCalledWith(expect.objectContaining({ perPage: 50 }));
+    });
+
+    it('payload completo: trim + defaults aplicados em uma só chamada', async () => {
+      const repo = new FakeIssueRepository();
+      const useCase = new ListIssuesUseCase(repo);
+
+      await useCase.execute({ owner: '  foo  ', repo: '  bar  ', page: 1 });
+
+      expect(repo.list).toHaveBeenCalledWith({
+        owner: 'foo',
+        repo: 'bar',
+        state: 'open',
+        page: 1,
+        perPage: 20,
+      });
+    });
   });
 
-  it('throws InvalidQueryError when owner is empty after trim', async () => {
-    const repo = new FakeIssueRepository();
-    const useCase = new ListIssuesUseCase(repo);
+  describe('pass-through de retorno', () => {
+    it('devolve PaginatedResult do repo sem mutar', async () => {
+      const expected = { items: [makeIssue()], totalCount: 1, hasNextPage: false };
+      const repo = new FakeIssueRepository({ list: expected });
+      const useCase = new ListIssuesUseCase(repo);
 
-    await expect(useCase.execute({ owner: ' ', repo: 'bar', page: 1 })).rejects.toBeInstanceOf(
-      InvalidQueryError,
-    );
-    expect(repo.list).not.toHaveBeenCalled();
+      const result = await useCase.execute({ owner: 'foo', repo: 'bar', page: 1 });
+      expect(result).toBe(expected);
+    });
   });
 
-  it('throws InvalidQueryError when repo is empty after trim', async () => {
-    const repo = new FakeIssueRepository();
-    const useCase = new ListIssuesUseCase(repo);
+  describe('propagação de erros tipados', () => {
+    it.each([
+      ['RateLimitError', new RateLimitError()],
+      ['NetworkError', new NetworkError()],
+      ['NotFoundError', new NotFoundError('Issues')],
+    ])('propaga %s sem reembrulhar', async (_label, error) => {
+      const repo = new FakeIssueRepository();
+      repo.list.mockRejectedValueOnce(error);
+      const useCase = new ListIssuesUseCase(repo);
 
-    await expect(useCase.execute({ owner: 'foo', repo: '', page: 1 })).rejects.toBeInstanceOf(
-      InvalidQueryError,
-    );
+      await expect(useCase.execute({ owner: 'foo', repo: 'bar', page: 1 })).rejects.toBe(error);
+    });
   });
 
-  it('propagates RateLimitError from repository intact', async () => {
-    const repo = new FakeIssueRepository();
-    repo.list.mockRejectedValueOnce(new RateLimitError());
-    const useCase = new ListIssuesUseCase(repo);
+  describe('não vaza tipos da infra', () => {
+    it('retorna Issue com createdAt como Date (não string ISO crua)', async () => {
+      const expected = {
+        items: [makeIssue({ createdAt: new Date('2026-02-10T09:00:00Z') })],
+        totalCount: 1,
+        hasNextPage: false,
+      };
+      const repo = new FakeIssueRepository({ list: expected });
+      const useCase = new ListIssuesUseCase(repo);
 
-    await expect(useCase.execute({ owner: 'foo', repo: 'bar', page: 1 })).rejects.toBeInstanceOf(
-      RateLimitError,
-    );
-  });
+      const result = await useCase.execute({ owner: 'foo', repo: 'bar', page: 1 });
 
-  it('returns the paginated issues result', async () => {
-    const expected = { items: [makeIssue()], totalCount: 1, hasNextPage: false };
-    const repo = new FakeIssueRepository({ list: expected });
-    const useCase = new ListIssuesUseCase(repo);
-
-    const result = await useCase.execute({ owner: 'foo', repo: 'bar', page: 1 });
-    expect(result).toEqual(expected);
+      expect(result.items[0]?.createdAt).toBeInstanceOf(Date);
+      expect(result).not.toHaveProperty('total_count');
+      expect(result.items[0]).not.toHaveProperty('created_at');
+      expect(result.items[0]).not.toHaveProperty('html_url');
+    });
   });
 });
