@@ -4,7 +4,6 @@ import { NetworkError } from '@/domain/errors/NetworkError';
 import { NotFoundError } from '@/domain/errors/NotFoundError';
 import { RateLimitError } from '@/domain/errors/RateLimitError';
 import { UnexpectedError } from '@/domain/errors/UnexpectedError';
-
 import { mapHttpError } from 'src/infra/http/errorMapper';
 
 function makeAxiosError(

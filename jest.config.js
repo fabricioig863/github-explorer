@@ -58,5 +58,23 @@ module.exports = {
     '^@/application/(.*)$': '<rootDir>/src/application/$1',
     '^@/infrastructure/(.*)$': '<rootDir>/src/infrastructure/$1',
     '^@/presentation/(.*)$': '<rootDir>/src/presentation/$1',
+    '^msw/node$': '<rootDir>/node_modules/msw/lib/node/index.js',
+    '^msw$': '<rootDir>/node_modules/msw/lib/core/index.js',
   },
+  // msw@2 publica builds condicionais via package.json#exports. jest-expo seta
+  // a condição 'react-native' que mapeia `msw/node` para `null`, bloqueando o
+  // módulo. Mapeamos `msw/node` direto para o bundle CJS pré-compilado.
+  // Adicionalmente: msw depende transitivamente de `rettime` (e outros) que
+  // são ESM-only. jest-expo permite transform sob `.pnpm/...` no nível raiz,
+  // mas o regex padrão (não-âncorado) re-ignora arquivos sob o segundo
+  // node_modules aninhado. Override abaixo lista explicitamente os deps ESM
+  // do msw para que babel-jest os transpile para CJS.
+  moduleDirectories: ['node_modules'],
+  transform: {
+    '^.+\\.mjs$': 'babel-jest',
+  },
+  transformIgnorePatterns: [
+    'node_modules/(?!(.pnpm|react-native|@react-native|@react-native-community|expo|@expo|@expo-google-fonts|react-navigation|@react-navigation|@sentry/react-native|native-base|msw|@mswjs|@bundled-es-modules|@open-draft|until-async|headers-polyfill|cookie|tough-cookie|outvariant|rettime|strict-event-emitter|graphql|statuses|is-node-process|path-to-regexp|set-cookie-parser|type-fest))',
+    '/node_modules/react-native-reanimated/plugin/',
+  ],
 };
