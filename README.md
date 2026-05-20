@@ -27,7 +27,8 @@ paginação infinita e tratamento tipado de erros.
 5. [Valor desse desenho no dia a dia](#5-valor-desse-desenho-no-dia-a-dia)
 6. [Como rodar](#6-como-rodar)
 7. [Scripts e thresholds](#7-scripts-e-thresholds)
-8. [O que faria diferente com mais tempo](#8-o-que-faria-diferente-com-mais-tempo)
+8. [Estratégia de testes](#8-estratégia-de-testes)
+9. [O que faria diferente com mais tempo](#9-o-que-faria-diferente-com-mais-tempo)
 
 ---
 
@@ -378,19 +379,25 @@ anteriores, ela está funcionando.
 
 ### 5.3. Testes baratos por design
 
-A pirâmide saiu naturalmente:
+A pirâmide saiu naturalmente — três categorias de teste, cada uma no
+nível certo (detalhes em [§ 8 — Estratégia de testes](#8-estratégia-de-testes)
+e [`docs/TESTING.md`](./docs/TESTING.md)):
 
-| Camada              | Estratégia                                | Cobertura |
-| ------------------- | ----------------------------------------- | --------- |
-| Domain              | Unit puro (construtor, `instanceof`)      | 100 %     |
-| Application         | Unit com fake repository                  | 100 %     |
-| Infra (mappers)     | Unit DTO → Entity                         | 100 %     |
-| Infra (errorMapper) | Unit com `AxiosError` montado à mão       | 100 %     |
-| Hooks               | `renderHook` + container mockado          | 100 %     |
-| Components          | RNTL render + interação                   | ~95 %     |
-| Screens             | RNTL render integrado + container mockado | ~85 %     |
+| Camada                | Estratégia                                                                     | Cobertura |
+| --------------------- | ------------------------------------------------------------------------------ | --------- |
+| Domain                | Unit puro (`instanceof`, payload, `code`)                                      | 100 %     |
+| Application           | Unit com Fakes — 6 categorias por use case                                     | 100 %     |
+| Infra (mappers)       | Unit DTO → Entity                                                              | 100 %     |
+| Infra (errorMapper)   | Unit com `AxiosError` montado à mão                                            | 100 %     |
+| Infra (adapters HTTP) | **Integração de boundary** com `msw` interceptando axios/XHR                  | 100 %     |
+| Infra (DI container)  | `jest.isolateModules` + env toggling para cobrir USE_MOCK true/false           | 100 %     |
+| Hooks                 | `renderHook` + container mockado                                               | 100 %     |
+| Components            | RNTL render + interação                                                        | ~95 %     |
+| Screens               | RNTL render + container mockado                                                | ~85 %     |
+| **Vertical slice**    | **Integração de composição** — hook real + use case real + InMemory repo real | em `__tests__/integration/` |
 
-171 testes em 38 suites rodam em ~4 s.
+**287 testes em 49 suites** rodam em ~5 s (`npm test`). `npm run test:int`
+roda só as 5 specs de integração (boundary + slice) em ~3 s.
 
 ### 5.4. Manutenibilidade real, não retórica
 
@@ -457,7 +464,9 @@ Em dispositivo físico: instale Expo Go, escaneie o QR Code que o
 ```bash
 pnpm typecheck       # tsc --noEmit (zero erros)
 pnpm lint            # eslint flat config (zero errors)
-pnpm test            # jest (38 suites, 171 testes)
+pnpm test            # jest (49 suites, 287 testes)
+pnpm test:unit       # jest sem *.int.test.*  — rápido, ~10 s
+pnpm test:int        # só *.int.test.*       — 5 suites de integração, ~3 s
 pnpm test:coverage   # jest --coverage com thresholds
 pnpm test:watch      # jest watch mode
 pnpm format          # prettier
@@ -478,18 +487,108 @@ Relatório HTML em `coverage/lcov-report/index.html` após
 | -------------------- | -------------------------------------------------------- |
 | `pnpm typecheck`     | 0 erros                                                  |
 | `pnpm lint`          | 0 errors, ~87 warnings (deprecation de boundaries v5→v6) |
-| `pnpm test`          | 38/38 suites, 171/171 testes                             |
-| `pnpm test:coverage` | Global ~92 %, domain 100 %, application 100 %            |
+| `pnpm test`          | 49/49 suites, 287/287 testes                             |
+| `pnpm test:coverage` | Global 94 % stmts / 87 % br / 89 % fn / 95 % lines       |
 
 ---
 
-## 8. O que faria diferente com mais tempo
+## 8. Estratégia de testes
+
+> Declaração honesta (seção 8 do PDF do teste técnico):
+> os testes de integração HTTP com `msw` e a fatia vertical de composição
+> foram introduzidos para **corrigir uma falsa cobertura detectada via
+> auditoria** — o `collectCoverageFrom` excluía `GitHubRepoRepository`,
+> `GitHubIssueRepository`, `httpClient` e `container.ts`, gerando um
+> relatório verde sobre código não exercitado. O processo de detecção,
+> raciocínio e remediação está em [`docs/TESTING.md`](./docs/TESTING.md).
+
+### 8.1. Três categorias de teste, três lugares
+
+| Categoria | Onde fica | O que cobre |
+| --- | --- | --- |
+| **Unit** | `__tests__/{domain,application,infrastructure,presentation}/**/*.test.{ts,tsx}` | Função/classe isolada com dependências substituídas por Fakes ou mocks. Use cases (8 specs), mappers, errorMapper, hooks, components, utils, screens. |
+| **Integração de composição** | `__tests__/integration/*.int.test.tsx` | Hook real → use case real → `InMemoryRepoRepository`/`InMemorySavedReposRepository` real. **Zero** `jest.mock('src/infra/di/container', ...)`. Valida que o contrato entre as três camadas não quebra silenciosamente. |
+| **Integração de boundary** | `__tests__/infrastructure/**/*.int.test.ts` | Adapter HTTP real (`GitHubRepoRepository`, `GitHubIssueRepository`, `httpClient`) contra `msw` interceptando no nível do Node http/XHR. Cobre query params, headers, paginação (`hasNextPage = page*perPage < total_count`), auth (`Bearer <token>`), rate limit (403+`x-ratelimit-remaining=0`), timeout. |
+
+### 8.2. Como rodar cada suíte
+
+```bash
+npm run test:unit       # tudo exceto *.int.test.* — rápido
+npm run test:int        # só *.int.test.* — 5 suites, 42 testes
+npm run test:coverage   # relatório completo
+npm test                # roda todo o conjunto (49 suites, 287 testes)
+```
+
+### 8.3. Por que `msw` foi escolhido
+
+Padrão de mercado para teste de boundary HTTP. Decisivo aqui:
+
+- **Intercepta no nível do XHR/fetch nativo do Node**, não acopla a `axios`.
+  Se um dia o app trocar `axios` por `fetch`, os testes não mudam.
+- **`onUnhandledRequest: 'error'`** transforma qualquer request não-mockada
+  em fail explícito do teste — impossível um spec vazar pra `api.github.com`
+  de verdade.
+- **Transferível para E2E** (Maestro/Detox) e para Storybook, caso o roadmap
+  evolua nessa direção.
+
+Alternativas consideradas e descartadas: `axios-mock-adapter` (acopla
+ao client), `nock` (foco em Node puro, ergonomia inferior para
+`Response` declarativos), `jest.mock('axios', ...)` (deixa o adapter real
+sem cobertura — o problema original).
+
+### 8.4. Thresholds por camada (e por que `domain`/`application` são 100 %)
+
+```js
+// jest.config.js
+coverageThreshold: {
+  global:               { statements: 80,  branches: 75,  functions: 80,  lines: 80 },
+  './src/domain/':      { statements: 100, branches: 100, functions: 100, lines: 100 },
+  './src/application/': { statements: 100, branches: 95,  functions: 100, lines: 100 },
+}
+```
+
+**Por que `domain` e `application` em 100 %:**
+- Ambas são puras: nenhum `react-native`, nenhum `axios`, nenhum
+  `AsyncStorage`. Cobertura alta é **barata**.
+- São o núcleo do negócio (regras de sanitização, validação, defaults,
+  propagação de erro). Qualquer regressão aqui vaza para a UI e
+  silencia bugs comportamentais.
+- Threshold forçado significa que um use case novo sem teste **quebra
+  o CI**, não passa despercebido.
+
+**Por que `global` em 80 % e não 100 %:**
+- `presentation/screens` paga ~85 % pq render-trees têm branches
+  defensivos (loading/empty/error states) cuja combinatória custaria
+  mais para cobrir do que entrega.
+- `infra/repositories/AsyncStorageSavedReposRepository.ts` paga 96 % pq
+  uma linha de defensive fallback é difícil de exercitar sem mockar
+  o boundary do AsyncStorage de forma artificial.
+
+### 8.5. Cobertura por camada (estado atual)
+
+| Camada | Stmts | Branches | Funcs | Lines |
+| --- | --- | --- | --- | --- |
+| `domain/` | 100 % | 100 % | 100 % | 100 % |
+| `application/` | 100 % | 100 % | 100 % | 100 % |
+| `infra/di` | 100 % | 100 % | 100 % | 100 % |
+| `infra/http` | 100 % | 100 % | 100 % | 100 % |
+| `infra/http/mappers` | 100 % | 100 % | 100 % | 100 % |
+| `infra/query` | 100 % | 100 % | 100 % | 100 % |
+| `infra/repositories` | 98.27 % | 92.30 % | 100 % | 100 % |
+| `presentation/components` | 95.65 % | 95.91 % | 88.23 % | 95.45 % |
+| `presentation/hooks` | 100 % | 100 % | 100 % | 100 % |
+| `presentation/screens` | 84.55 % | 66.66 % | 73.68 % | 85.15 % |
+| `presentation/utils` | 100 % | 100 % | 100 % | 100 % |
+
+---
+
+## 9. O que faria diferente com mais tempo
 
 O escopo atual prioriza arquitetura, qualidade de código e cobertura
 de testes unitários/integração. Com mais tempo, levaria o produto
 para o nível seguinte nas frentes abaixo:
 
-### 8.1. Autenticação OAuth (Google e Apple)
+### 9.1. Autenticação OAuth (Google e Apple)
 
 Hoje o app consome apenas endpoints públicos com um PAT opcional
 embutido no bundle. Em produção, eu trocaria por um fluxo real de
@@ -508,7 +607,7 @@ login social:
 - Nova camada `infra/auth/` com interface `IAuthRepository` no domain,
   preservando a regra de dependência.
 
-### 8.2. Tela de Profile completa
+### 9.2. Tela de Profile completa
 
 A aba "Me" hoje é read-only e usa um username fixo via env. Com login,
 ela vira hub do usuário autenticado:
@@ -525,7 +624,7 @@ ela vira hub do usuário autenticado:
   preferências de cache, logout.
 - Upload de avatar via `expo-image-picker` + endpoint adequado.
 
-### 8.3. Testes End-to-End (Detox ou Maestro)
+### 9.3. Testes End-to-End (Detox ou Maestro)
 
 A pirâmide hoje termina em screen-level com container mockado. Falta
 a ponta de cima: smoke real no device.
@@ -545,7 +644,7 @@ a ponta de cima: smoke real no device.
 - Cobertura E2E não substitui unit/integration; complementa o topo
   da pirâmide.
 
-### 8.4. Outras melhorias que entrariam no roadmap
+### 9.4. Outras melhorias que entrariam no roadmap
 
 - **i18n** com `i18next` (hoje strings pt-BR estão hardcoded).
 - **Acessibilidade auditada**: labels, roles, contraste WCAG AA,
