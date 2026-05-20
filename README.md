@@ -12,12 +12,6 @@ dependência travada por ESLint, cobertura de testes ≥ 80 % global
 (domain e application em 100 %), tema light/dark, busca com debounce,
 paginação infinita e tratamento tipado de erros.
 
-> Documentação detalhada por arquivo em
-> [`docs/PROJETO.md`](./docs/PROJETO.md). Este README é o ponto de entrada
-> conceitual.
-
----
-
 ## Sumário
 
 1. [Sobre o projeto](#1-sobre-o-projeto)
@@ -383,17 +377,17 @@ A pirâmide saiu naturalmente — três categorias de teste, cada uma no
 nível certo (detalhes em [§ 8 — Estratégia de testes](#8-estratégia-de-testes)
 e [`docs/TESTING.md`](./docs/TESTING.md)):
 
-| Camada                | Estratégia                                                                     | Cobertura |
-| --------------------- | ------------------------------------------------------------------------------ | --------- |
-| Domain                | Unit puro (`instanceof`, payload, `code`)                                      | 100 %     |
-| Application           | Unit com Fakes — 6 categorias por use case                                     | 100 %     |
-| Infra (mappers)       | Unit DTO → Entity                                                              | 100 %     |
-| Infra (errorMapper)   | Unit com `AxiosError` montado à mão                                            | 100 %     |
-| Infra (adapters HTTP) | **Integração de boundary** com `msw` interceptando axios/XHR                  | 100 %     |
-| Infra (DI container)  | `jest.isolateModules` + env toggling para cobrir USE_MOCK true/false           | 100 %     |
-| Hooks                 | `renderHook` + container mockado                                               | 100 %     |
-| Components            | RNTL render + interação                                                        | ~95 %     |
-| Screens               | RNTL render + container mockado                                                | ~85 %     |
+| Camada                | Estratégia                                                                    | Cobertura                   |
+| --------------------- | ----------------------------------------------------------------------------- | --------------------------- |
+| Domain                | Unit puro (`instanceof`, payload, `code`)                                     | 100 %                       |
+| Application           | Unit com Fakes — 6 categorias por use case                                    | 100 %                       |
+| Infra (mappers)       | Unit DTO → Entity                                                             | 100 %                       |
+| Infra (errorMapper)   | Unit com `AxiosError` montado à mão                                           | 100 %                       |
+| Infra (adapters HTTP) | **Integração de boundary** com `msw` interceptando axios/XHR                  | 100 %                       |
+| Infra (DI container)  | `jest.isolateModules` + env toggling para cobrir USE_MOCK true/false          | 100 %                       |
+| Hooks                 | `renderHook` + container mockado                                              | 100 %                       |
+| Components            | RNTL render + interação                                                       | ~95 %                       |
+| Screens               | RNTL render + container mockado                                               | ~85 %                       |
 | **Vertical slice**    | **Integração de composição** — hook real + use case real + InMemory repo real | em `__tests__/integration/` |
 
 **287 testes em 49 suites** rodam em ~5 s (`npm test`). `npm run test:int`
@@ -504,11 +498,11 @@ Relatório HTML em `coverage/lcov-report/index.html` após
 
 ### 8.1. Três categorias de teste, três lugares
 
-| Categoria | Onde fica | O que cobre |
-| --- | --- | --- |
-| **Unit** | `__tests__/{domain,application,infrastructure,presentation}/**/*.test.{ts,tsx}` | Função/classe isolada com dependências substituídas por Fakes ou mocks. Use cases (8 specs), mappers, errorMapper, hooks, components, utils, screens. |
-| **Integração de composição** | `__tests__/integration/*.int.test.tsx` | Hook real → use case real → `InMemoryRepoRepository`/`InMemorySavedReposRepository` real. **Zero** `jest.mock('src/infra/di/container', ...)`. Valida que o contrato entre as três camadas não quebra silenciosamente. |
-| **Integração de boundary** | `__tests__/infrastructure/**/*.int.test.ts` | Adapter HTTP real (`GitHubRepoRepository`, `GitHubIssueRepository`, `httpClient`) contra `msw` interceptando no nível do Node http/XHR. Cobre query params, headers, paginação (`hasNextPage = page*perPage < total_count`), auth (`Bearer <token>`), rate limit (403+`x-ratelimit-remaining=0`), timeout. |
+| Categoria                    | Onde fica                                                                       | O que cobre                                                                                                                                                                                                                                                                                                |
+| ---------------------------- | ------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Unit**                     | `__tests__/{domain,application,infrastructure,presentation}/**/*.test.{ts,tsx}` | Função/classe isolada com dependências substituídas por Fakes ou mocks. Use cases (8 specs), mappers, errorMapper, hooks, components, utils, screens.                                                                                                                                                      |
+| **Integração de composição** | `__tests__/integration/*.int.test.tsx`                                          | Hook real → use case real → `InMemoryRepoRepository`/`InMemorySavedReposRepository` real. **Zero** `jest.mock('src/infra/di/container', ...)`. Valida que o contrato entre as três camadas não quebra silenciosamente.                                                                                     |
+| **Integração de boundary**   | `__tests__/infrastructure/**/*.int.test.ts`                                     | Adapter HTTP real (`GitHubRepoRepository`, `GitHubIssueRepository`, `httpClient`) contra `msw` interceptando no nível do Node http/XHR. Cobre query params, headers, paginação (`hasNextPage = page*perPage < total_count`), auth (`Bearer <token>`), rate limit (403+`x-ratelimit-remaining=0`), timeout. |
 
 ### 8.2. Como rodar cada suíte
 
@@ -548,6 +542,7 @@ coverageThreshold: {
 ```
 
 **Por que `domain` e `application` em 100 %:**
+
 - Ambas são puras: nenhum `react-native`, nenhum `axios`, nenhum
   `AsyncStorage`. Cobertura alta é **barata**.
 - São o núcleo do negócio (regras de sanitização, validação, defaults,
@@ -557,6 +552,7 @@ coverageThreshold: {
   o CI**, não passa despercebido.
 
 **Por que `global` em 80 % e não 100 %:**
+
 - `presentation/screens` paga ~85 % pq render-trees têm branches
   defensivos (loading/empty/error states) cuja combinatória custaria
   mais para cobrir do que entrega.
@@ -566,19 +562,19 @@ coverageThreshold: {
 
 ### 8.5. Cobertura por camada (estado atual)
 
-| Camada | Stmts | Branches | Funcs | Lines |
-| --- | --- | --- | --- | --- |
-| `domain/` | 100 % | 100 % | 100 % | 100 % |
-| `application/` | 100 % | 100 % | 100 % | 100 % |
-| `infra/di` | 100 % | 100 % | 100 % | 100 % |
-| `infra/http` | 100 % | 100 % | 100 % | 100 % |
-| `infra/http/mappers` | 100 % | 100 % | 100 % | 100 % |
-| `infra/query` | 100 % | 100 % | 100 % | 100 % |
-| `infra/repositories` | 98.27 % | 92.30 % | 100 % | 100 % |
-| `presentation/components` | 95.65 % | 95.91 % | 88.23 % | 95.45 % |
-| `presentation/hooks` | 100 % | 100 % | 100 % | 100 % |
-| `presentation/screens` | 84.55 % | 66.66 % | 73.68 % | 85.15 % |
-| `presentation/utils` | 100 % | 100 % | 100 % | 100 % |
+| Camada                    | Stmts   | Branches | Funcs   | Lines   |
+| ------------------------- | ------- | -------- | ------- | ------- |
+| `domain/`                 | 100 %   | 100 %    | 100 %   | 100 %   |
+| `application/`            | 100 %   | 100 %    | 100 %   | 100 %   |
+| `infra/di`                | 100 %   | 100 %    | 100 %   | 100 %   |
+| `infra/http`              | 100 %   | 100 %    | 100 %   | 100 %   |
+| `infra/http/mappers`      | 100 %   | 100 %    | 100 %   | 100 %   |
+| `infra/query`             | 100 %   | 100 %    | 100 %   | 100 %   |
+| `infra/repositories`      | 98.27 % | 92.30 %  | 100 %   | 100 %   |
+| `presentation/components` | 95.65 % | 95.91 %  | 88.23 % | 95.45 % |
+| `presentation/hooks`      | 100 %   | 100 %    | 100 %   | 100 %   |
+| `presentation/screens`    | 84.55 % | 66.66 %  | 73.68 % | 85.15 % |
+| `presentation/utils`      | 100 %   | 100 %    | 100 %   | 100 %   |
 
 ---
 
