@@ -6,6 +6,12 @@ import type { ReactElement, ReactNode } from 'react';
 
 import { lightTheme } from 'src/infra/theme/lightTheme';
 
+// Fábrica exportada para que cada teste possa instanciar seu próprio client
+// (cache isolado). `renderWithProviders` chama esta função por padrão a cada
+// invocação — nunca compartilha um QueryClient entre renders. Isolamento é
+// validado pelo meta-test em `renderWithProviders.test.tsx`.
+// Defaults: `retry: false` (evita esperas em testes de erro), `gcTime: 0` e
+// `staleTime: 0` (cache nunca vive — toda query refetch a cada render).
 export function createTestQueryClient(): QueryClient {
   return new QueryClient({
     defaultOptions: {

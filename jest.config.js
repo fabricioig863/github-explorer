@@ -7,7 +7,11 @@ module.exports = {
     '<rootDir>/src/**/*.test.ts',
     '<rootDir>/src/**/*.test.tsx',
   ],
-  testPathIgnorePatterns: ['/node_modules/', '<rootDir>/__tests__/test-utils/'],
+  // test-utils/ não tem ignore explícito — testMatch só pega *.test.ts(x),
+  // logo fakes/fixtures/jest.setup/renderWithProviders.tsx não viram suites.
+  // Excluir o dir inteiro bloquearia meta-tests legítimos como o de isolamento
+  // de QueryClient em renderWithProviders.test.tsx.
+  testPathIgnorePatterns: ['/node_modules/'],
   collectCoverageFrom: [
     'src/domain/**/*.{ts,tsx}',
     'src/application/**/*.{ts,tsx}',

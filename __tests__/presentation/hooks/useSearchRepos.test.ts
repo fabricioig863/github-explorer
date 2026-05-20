@@ -8,8 +8,6 @@ jest.mock('src/infra/di/container', () => ({
     getRepoDetailsUseCase: { execute: jest.fn() },
     listIssuesUseCase: { execute: jest.fn() },
     countOpenIssuesUseCase: { execute: jest.fn() },
-    getUserProfileUseCase: { execute: jest.fn() },
-    getRecentCommitsUseCase: { execute: jest.fn() },
   },
 }));
 
