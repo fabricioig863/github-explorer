@@ -11,8 +11,8 @@ import { Spinner } from '@/presentation/design-system/primitives/Spinner';
 import { Text } from '@/presentation/design-system/primitives/Text';
 import { useIssues } from '@/presentation/hooks/useIssues';
 import { useOpenIssuesCount } from '@/presentation/hooks/useOpenIssuesCount';
-import type { ExploreStackScreenProps } from 'src/infra/navigation/types';
 import { getErrorMessage } from '@/presentation/utils/getErrorMessage';
+import type { ExploreStackScreenProps } from 'src/infra/navigation/types';
 import type { Theme } from 'src/infra/theme/lightTheme';
 
 type Props = ExploreStackScreenProps<'Issues'>;

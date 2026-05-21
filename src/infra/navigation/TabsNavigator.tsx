@@ -2,9 +2,9 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useTheme } from '@shopify/restyle';
 import { Bookmark, Compass } from 'lucide-react-native';
 
+import { SavedScreen } from '@/presentation/screens/SavedScreen';
 import { ExploreStack } from 'src/infra/navigation/ExploreStack';
 import type { TabsParamList } from 'src/infra/navigation/types';
-import { SavedScreen } from '@/presentation/screens/SavedScreen';
 import type { Theme } from 'src/infra/theme/lightTheme';
 
 const Tabs = createBottomTabNavigator<TabsParamList>();

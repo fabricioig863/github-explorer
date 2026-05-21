@@ -1,10 +1,10 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useTheme } from '@shopify/restyle';
 
-import type { ExploreStackParamList } from 'src/infra/navigation/types';
 import { IssuesScreen } from '@/presentation/screens/IssuesScreen';
 import { RepoDetailScreen } from '@/presentation/screens/RepoDetailScreen';
 import { SearchScreen } from '@/presentation/screens/SearchScreen';
+import type { ExploreStackParamList } from 'src/infra/navigation/types';
 import type { Theme } from 'src/infra/theme/lightTheme';
 
 const Stack = createNativeStackNavigator<ExploreStackParamList>();
