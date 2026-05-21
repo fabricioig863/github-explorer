@@ -41,11 +41,6 @@ export type RepoStackScreenProps<T extends keyof RepoStackParamList> = NativeSta
   T
 >;
 
-export type ProfileTabScreenProps = CompositeScreenProps<
-  BottomTabScreenProps<TabsParamList, 'SavedTab'>,
-  NativeStackScreenProps<ExploreStackParamList>
->;
-
 declare global {
   namespace ReactNavigation {
     interface RootParamList extends TabsParamList {}

@@ -13,7 +13,7 @@ import { Text } from '@/presentation/design-system/primitives/Text';
 import { useSavedRepos } from '@/presentation/hooks/useSavedRepos';
 import { getErrorMessage } from '@/presentation/utils/getErrorMessage';
 import { countByCollection, type CollectionId } from '@/presentation/utils/savedCollections';
-import type { ProfileTabScreenProps } from 'src/infra/navigation/types';
+import type { SavedStackScreenProps } from 'src/infra/navigation/types';
 import { useThemeMode } from 'src/infra/theme/AppThemeProvider';
 import type { Theme } from 'src/infra/theme/lightTheme';
 
@@ -23,7 +23,7 @@ import { SavedScreenSkeleton } from './components/SavedScreenSkeleton';
 
 type TabId = 'collections' | 'all' | 'recent';
 
-type Props = ProfileTabScreenProps;
+type Props = SavedStackScreenProps<'Saved'>;
 
 export function SavedScreen({ navigation }: Props) {
   const theme = useTheme<Theme>();
@@ -48,10 +48,7 @@ export function SavedScreen({ navigation }: Props) {
   );
 
   const handleOpenRepo = (repo: SavedRepo) => {
-    navigation.navigate('ExploreTab', {
-      screen: 'RepoDetail',
-      params: { owner: repo.ownerLogin, repo: repo.name },
-    });
+    navigation.navigate('RepoDetail', { owner: repo.ownerLogin, repo: repo.name });
   };
 
   const renderRow: ListRenderItem<SavedRepo> = ({ item }) => (

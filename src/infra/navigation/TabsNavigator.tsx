@@ -2,8 +2,8 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useTheme } from '@shopify/restyle';
 import { Bookmark, Compass } from 'lucide-react-native';
 
-import { SavedScreen } from '@/presentation/screens/SavedScreen';
 import { ExploreStack } from 'src/infra/navigation/ExploreStack';
+import { SavedStack } from 'src/infra/navigation/SavedStack';
 import type { TabsParamList } from 'src/infra/navigation/types';
 import type { Theme } from 'src/infra/theme/lightTheme';
 
@@ -39,7 +39,7 @@ export function TabsNavigator() {
       />
       <Tabs.Screen
         name="SavedTab"
-        component={SavedScreen}
+        component={SavedStack}
         options={{
           title: 'Salvos',
           tabBarIcon: ({ color, focused }) => (

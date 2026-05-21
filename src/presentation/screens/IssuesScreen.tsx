@@ -12,10 +12,10 @@ import { Text } from '@/presentation/design-system/primitives/Text';
 import { useIssues } from '@/presentation/hooks/useIssues';
 import { useOpenIssuesCount } from '@/presentation/hooks/useOpenIssuesCount';
 import { getErrorMessage } from '@/presentation/utils/getErrorMessage';
-import type { ExploreStackScreenProps } from 'src/infra/navigation/types';
+import type { RepoStackScreenProps } from 'src/infra/navigation/types';
 import type { Theme } from 'src/infra/theme/lightTheme';
 
-type Props = ExploreStackScreenProps<'Issues'>;
+type Props = RepoStackScreenProps<'Issues'>;
 
 export function IssuesScreen({ route }: Props) {
   const { owner, repo } = route.params;

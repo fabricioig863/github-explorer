@@ -11,7 +11,7 @@ import { useOpenIssuesCount } from '@/presentation/hooks/useOpenIssuesCount';
 import { useRepoDetails } from '@/presentation/hooks/useRepoDetails';
 import { useToggleSaveRepo } from '@/presentation/hooks/useToggleSaveRepo';
 import { getErrorMessage } from '@/presentation/utils/getErrorMessage';
-import type { ExploreStackScreenProps } from 'src/infra/navigation/types';
+import type { RepoStackScreenProps } from 'src/infra/navigation/types';
 
 import { CircleDotIcon } from './components/CircleDotIcon';
 import { RepoDetailSkeleton } from './components/RepoDetailSkeleton';
@@ -19,7 +19,7 @@ import { RepoHero } from './components/RepoHero';
 import { RepoMeta } from './components/RepoMeta';
 import { StatsGrid } from './components/StatsGrid';
 
-type Props = ExploreStackScreenProps<'RepoDetail'>;
+type Props = RepoStackScreenProps<'RepoDetail'>;
 
 export function RepoDetailScreen({ route, navigation }: Props) {
   const { owner, repo } = route.params;

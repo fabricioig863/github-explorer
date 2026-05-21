@@ -53,7 +53,7 @@ function makeProps() {
         setParams: jest.fn(),
         addListener: jest.fn(() => () => {}),
       } as never,
-      route: { key: 'k', name: 'SavedTab' } as never,
+      route: { key: 'k', name: 'Saved' } as never,
     },
   };
 }
@@ -125,9 +125,9 @@ describe('SavedScreen', () => {
     const row = await screen.findByText('react-native');
     fireEvent.press(row);
 
-    expect(navigate).toHaveBeenCalledWith('ExploreTab', {
-      screen: 'RepoDetail',
-      params: { owner: 'facebook', repo: 'react-native' },
+    expect(navigate).toHaveBeenCalledWith('RepoDetail', {
+      owner: 'facebook',
+      repo: 'react-native',
     });
   });
 });
