@@ -1,5 +1,4 @@
 import { useTheme } from '@shopify/restyle';
-import { Search } from 'lucide-react-native';
 import { useCallback, useState } from 'react';
 import { FlatList, RefreshControl, type ListRenderItem } from 'react-native';
 
@@ -7,17 +6,18 @@ import type { Repository } from '@/domain/entities/Repository';
 import { EmptyState } from '@/presentation/components/EmptyState';
 import { RateLimitBanner } from '@/presentation/components/RateLimitBanner';
 import { RepoListItem } from '@/presentation/components/RepoListItem';
-import { Input } from '@/presentation/design-system/Input';
 import { Skeleton } from '@/presentation/design-system/Skeleton';
 import { Box } from '@/presentation/design-system/primitives/Box';
 import { Spinner } from '@/presentation/design-system/primitives/Spinner';
 import { Text } from '@/presentation/design-system/primitives/Text';
 import { useDebounce } from '@/presentation/hooks/useDebounce';
 import { useSearchRepos } from '@/presentation/hooks/useSearchRepos';
-import type { ExploreStackScreenProps } from 'src/infra/navigation/types';
 import { getEmptySearchCopy } from '@/presentation/utils/getEmptySearchCopy';
 import { getErrorMessage } from '@/presentation/utils/getErrorMessage';
+import type { ExploreStackScreenProps } from 'src/infra/navigation/types';
 import type { Theme } from 'src/infra/theme/lightTheme';
+
+import { SearchHeader } from './components/SearchHeader';
 
 type Props = ExploreStackScreenProps<'Search'>;
 
@@ -154,27 +154,6 @@ export function SearchScreen({ navigation }: Props) {
           />
         }
         ListFooterComponent={renderFooter}
-      />
-    </Box>
-  );
-}
-
-interface SearchHeaderProps {
-  query: string;
-  onChangeQuery: (q: string) => void;
-}
-
-function SearchHeader({ query, onChangeQuery }: SearchHeaderProps) {
-  const theme = useTheme<Theme>();
-  return (
-    <Box paddingHorizontal="xxxl" paddingTop="md" paddingBottom="md">
-      <Input
-        placeholder="react native, typescript..."
-        value={query}
-        onChangeText={onChangeQuery}
-        leftIcon={<Search size={16} color={theme.colors.fgSubtle} />}
-        autoCorrect={false}
-        autoCapitalize="none"
       />
     </Box>
   );
