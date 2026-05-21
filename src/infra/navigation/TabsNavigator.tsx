@@ -36,11 +36,6 @@ export function TabsNavigator() {
           title: 'Explorar',
           tabBarIcon: ({ color }) => <Compass size={22} color={color} />,
         }}
-        listeners={({ navigation }) => ({
-          tabPress: () => {
-            navigation.navigate('ExploreTab', { screen: 'Search' });
-          },
-        })}
       />
       <Tabs.Screen
         name="SavedTab"
