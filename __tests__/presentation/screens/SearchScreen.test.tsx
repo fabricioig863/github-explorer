@@ -1,5 +1,12 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 
+import { NetworkError } from '@/domain/errors/NetworkError';
+import { SearchScreen } from '@/presentation/screens/SearchScreen';
+import { container } from 'src/infra/di/container';
+
+import { makeRepository } from '../../test-utils/fixtures/repository.fixture';
+import { renderWithProviders } from '../../test-utils/renderWithProviders';
+
 jest.mock('src/infra/di/container', () => ({
   container: {
     searchReposUseCase: { execute: jest.fn() },
@@ -8,13 +15,6 @@ jest.mock('src/infra/di/container', () => ({
     countOpenIssuesUseCase: { execute: jest.fn() },
   },
 }));
-
-import { NetworkError } from '@/domain/errors/NetworkError';
-import { SearchScreen } from '@/presentation/screens/SearchScreen';
-import { container } from 'src/infra/di/container';
-
-import { makeRepository } from '../../test-utils/fixtures/repository.fixture';
-import { renderWithProviders } from '../../test-utils/renderWithProviders';
 
 const executeMock = container.searchReposUseCase.execute as jest.Mock;
 
@@ -33,7 +33,10 @@ describe('SearchScreen', () => {
 
   it('shows the prompt empty state when the query is too short', () => {
     renderWithProviders(
-      <SearchScreen navigation={makeStubNavigation()} route={{ key: 'k', name: 'Search' } as never} />,
+      <SearchScreen
+        navigation={makeStubNavigation()}
+        route={{ key: 'k', name: 'Search' } as never}
+      />,
       { withNavigation: false },
     );
     expect(screen.getByText('Busque um repositório')).toBeTruthy();
@@ -48,7 +51,10 @@ describe('SearchScreen', () => {
     });
 
     renderWithProviders(
-      <SearchScreen navigation={makeStubNavigation()} route={{ key: 'k', name: 'Search' } as never} />,
+      <SearchScreen
+        navigation={makeStubNavigation()}
+        route={{ key: 'k', name: 'Search' } as never}
+      />,
       { withNavigation: false },
     );
 
@@ -64,7 +70,10 @@ describe('SearchScreen', () => {
     executeMock.mockResolvedValueOnce({ items: [], totalCount: 0, hasNextPage: false });
 
     renderWithProviders(
-      <SearchScreen navigation={makeStubNavigation()} route={{ key: 'k', name: 'Search' } as never} />,
+      <SearchScreen
+        navigation={makeStubNavigation()}
+        route={{ key: 'k', name: 'Search' } as never}
+      />,
       { withNavigation: false },
     );
 
@@ -81,7 +90,10 @@ describe('SearchScreen', () => {
     executeMock.mockRejectedValueOnce(new NetworkError());
 
     renderWithProviders(
-      <SearchScreen navigation={makeStubNavigation()} route={{ key: 'k', name: 'Search' } as never} />,
+      <SearchScreen
+        navigation={makeStubNavigation()}
+        route={{ key: 'k', name: 'Search' } as never}
+      />,
       { withNavigation: false },
     );
 

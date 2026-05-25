@@ -1,5 +1,11 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 
+import { SavedScreen } from '@/presentation/screens/SavedScreen';
+import { container } from 'src/infra/di/container';
+
+import { makeSavedRepo } from '../../test-utils/fixtures/savedRepo.fixture';
+import { renderWithProviders } from '../../test-utils/renderWithProviders';
+
 jest.mock('src/infra/di/container', () => ({
   container: {
     searchReposUseCase: { execute: jest.fn() },
@@ -32,12 +38,6 @@ jest.mock('react-native-safe-area-context', () => {
     useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
   };
 });
-
-import { SavedScreen } from '@/presentation/screens/SavedScreen';
-import { container } from 'src/infra/di/container';
-
-import { makeSavedRepo } from '../../test-utils/fixtures/savedRepo.fixture';
-import { renderWithProviders } from '../../test-utils/renderWithProviders';
 
 const listMock = container.listSavedReposUseCase.execute as jest.Mock;
 

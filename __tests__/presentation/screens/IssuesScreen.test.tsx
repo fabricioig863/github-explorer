@@ -1,5 +1,11 @@
 import { screen } from '@testing-library/react-native';
 
+import { IssuesScreen } from '@/presentation/screens/IssuesScreen';
+import { container } from 'src/infra/di/container';
+
+import { makeIssue } from '../../test-utils/fixtures/issue.fixture';
+import { renderWithProviders } from '../../test-utils/renderWithProviders';
+
 jest.mock('src/infra/di/container', () => ({
   container: {
     searchReposUseCase: { execute: jest.fn() },
@@ -8,12 +14,6 @@ jest.mock('src/infra/di/container', () => ({
     countOpenIssuesUseCase: { execute: jest.fn() },
   },
 }));
-
-import { IssuesScreen } from '@/presentation/screens/IssuesScreen';
-import { container } from 'src/infra/di/container';
-
-import { makeIssue } from '../../test-utils/fixtures/issue.fixture';
-import { renderWithProviders } from '../../test-utils/renderWithProviders';
 
 const listMock = container.listIssuesUseCase.execute as jest.Mock;
 const countMock = container.countOpenIssuesUseCase.execute as jest.Mock;
