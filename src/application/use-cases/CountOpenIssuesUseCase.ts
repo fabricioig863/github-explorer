@@ -1,4 +1,4 @@
-import { InvalidQueryError } from '@/domain/errors/InvalidQueryError';
+import { assertOwnerRepo } from '@/application/validation/assertInput';
 import type { IIssueRepository } from '@/domain/repositories/IIssueRepository';
 
 export interface CountOpenIssuesInput {
@@ -10,12 +10,7 @@ export class CountOpenIssuesUseCase {
   constructor(private readonly issueRepository: IIssueRepository) {}
 
   async execute(input: CountOpenIssuesInput): Promise<number> {
-    const owner = input.owner.trim();
-    const repo = input.repo.trim();
-
-    if (!owner || !repo) {
-      throw new InvalidQueryError('Owner e nome do repositório são obrigatórios.');
-    }
+    const { owner, repo } = assertOwnerRepo(input.owner, input.repo);
 
     return this.issueRepository.countOpen({ owner, repo });
   }

@@ -1,5 +1,5 @@
+import { assertOwnerRepo } from '@/application/validation/assertInput';
 import type { Issue } from '@/domain/entities/Issue';
-import { InvalidQueryError } from '@/domain/errors/InvalidQueryError';
 import type { IIssueRepository } from '@/domain/repositories/IIssueRepository';
 import type { PaginatedResult } from '@/domain/repositories/Pagination';
 
@@ -15,12 +15,7 @@ export class ListIssuesUseCase {
   constructor(private readonly issueRepository: IIssueRepository) {}
 
   async execute(input: ListIssuesInput): Promise<PaginatedResult<Issue>> {
-    const owner = input.owner.trim();
-    const repo = input.repo.trim();
-
-    if (!owner || !repo) {
-      throw new InvalidQueryError('Owner e nome do repositório são obrigatórios.');
-    }
+    const { owner, repo } = assertOwnerRepo(input.owner, input.repo);
 
     return this.issueRepository.list({
       owner,

@@ -13,7 +13,8 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.c4r3d4c4lur4.github-explorer"
     },
     "android": {
       "adaptiveIcon": {
