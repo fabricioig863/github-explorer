@@ -31,12 +31,12 @@ jest.mock('src/infra/repositories/fixtures/repos.fixture', () => {
   return { REPOS_FIXTURE: items };
 });
 
-import { useSearchRepos } from '@/presentation/hooks/useSearchRepos';
+import { repoQueries } from '@/presentation/query/collections/repoQueries';
 import { container } from 'src/infra/di/container';
 
 import { createTestQueryClient } from '../test-utils/renderWithProviders';
 
-const { QueryClientProvider } = require('@tanstack/react-query');
+const { QueryClientProvider, useInfiniteQuery } = require('@tanstack/react-query');
 
 function makeWrapper() {
   const client = createTestQueryClient();
@@ -45,7 +45,7 @@ function makeWrapper() {
     createElement(QueryClientProvider, { client }, children);
 }
 
-describe('vertical slice: useSearchRepos → SearchReposUseCase → InMemoryRepoRepository', () => {
+describe('vertical slice: repoQueries.search → SearchReposUseCase → InMemoryRepoRepository', () => {
   // Sem mock do container. spyOn permite inspecionar chamadas sem substituir
   // a implementação — o use case real continua rodando.
   let execSpy: jest.SpyInstance;
@@ -60,17 +60,17 @@ describe('vertical slice: useSearchRepos → SearchReposUseCase → InMemoryRepo
 
   describe('enabled gate', () => {
     it('com 1 char trimado, NÃO dispara o use case', () => {
-      renderHook(() => useSearchRepos({ query: 'a' }), { wrapper: makeWrapper() });
+      renderHook(() => useInfiniteQuery(repoQueries.search('a')), { wrapper: makeWrapper() });
       expect(execSpy).not.toHaveBeenCalled();
     });
 
     it('com 0 chars após trim (whitespace), NÃO dispara o use case', () => {
-      renderHook(() => useSearchRepos({ query: '   ' }), { wrapper: makeWrapper() });
+      renderHook(() => useInfiniteQuery(repoQueries.search('   ')), { wrapper: makeWrapper() });
       expect(execSpy).not.toHaveBeenCalled();
     });
 
     it('com 2+ chars trimados, dispara o use case ponta-a-ponta', async () => {
-      const { result } = renderHook(() => useSearchRepos({ query: 'test' }), {
+      const { result } = renderHook(() => useInfiniteQuery(repoQueries.search('test')), {
         wrapper: makeWrapper(),
       });
 
@@ -82,7 +82,7 @@ describe('vertical slice: useSearchRepos → SearchReposUseCase → InMemoryRepo
 
   describe('trim não duplica entre presentation e application', () => {
     it('query "  test  " chega no use case já trimada (single layer de trim)', async () => {
-      const { result } = renderHook(() => useSearchRepos({ query: '  test  ' }), {
+      const { result } = renderHook(() => useInfiniteQuery(repoQueries.search('  test  ')), {
         wrapper: makeWrapper(),
       });
 
@@ -101,7 +101,7 @@ describe('vertical slice: useSearchRepos → SearchReposUseCase → InMemoryRepo
     // cada renderHook independente paga ~500ms de latência simulada da
     // InMemoryRepoRepository. Splitting infla o tempo da suíte sem ganho.
     it('cobre página 1 (20 itens, hasNextPage=true) → fetchNextPage → página 2 (5 itens, hasNextPage=false)', async () => {
-      const { result } = renderHook(() => useSearchRepos({ query: 'test' }), {
+      const { result } = renderHook(() => useInfiniteQuery(repoQueries.search('test')), {
         wrapper: makeWrapper(),
       });
 

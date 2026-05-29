@@ -1,4 +1,5 @@
 import { useTheme } from '@shopify/restyle';
+import { useQuery } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import { type ListRenderItem } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -10,7 +11,7 @@ import { SegmentedTabs, type SegmentedTab } from '@/presentation/components/Segm
 import { ThemeToggleButton } from '@/presentation/components/ThemeToggleButton';
 import { Box } from '@/presentation/design-system/primitives/Box';
 import { Text } from '@/presentation/design-system/primitives/Text';
-import { useSavedRepos } from '@/presentation/hooks/useSavedRepos';
+import { savedQueries } from '@/presentation/query/collections/savedQueries';
 import { getErrorMessage } from '@/presentation/utils/getErrorMessage';
 import { countByCollection, type CollectionId } from '@/presentation/utils/savedCollections';
 import type { SavedStackScreenProps } from 'src/infra/navigation/types';
@@ -34,7 +35,7 @@ export function SavedScreen({ navigation }: Props) {
   const [tab, setTab] = useState<TabId>('collections');
   const [activeCollection, setActiveCollection] = useState<CollectionId | null>(null);
 
-  const { data: savedRepos = [], isLoading, error } = useSavedRepos();
+  const { data: savedRepos = [], isLoading, error } = useQuery(savedQueries.list());
   const counts = useMemo(() => countByCollection(savedRepos), [savedRepos]);
   const totalCount = savedRepos.length;
 

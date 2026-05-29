@@ -14,7 +14,10 @@ module.exports = defineConfig([
       'boundaries/elements': [
         { type: 'domain', pattern: 'src/domain/**' },
         { type: 'application', pattern: 'src/application/**' },
-        { type: 'infrastructure', pattern: 'src/infrastructure/**' },
+        // navigation é a composition root: liga screens (presentation) às rotas.
+        // Precede 'infrastructure' porque eslint-boundaries casa pelo 1º match.
+        { type: 'navigation', pattern: 'src/infra/navigation/**' },
+        { type: 'infrastructure', pattern: 'src/infra/**' },
         { type: 'presentation', pattern: 'src/presentation/**' },
       ],
     },

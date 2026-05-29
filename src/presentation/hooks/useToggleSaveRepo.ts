@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import type { Repository } from '@/domain/entities/Repository';
-import { SAVED_REPOS_QUERY_KEY } from '@/presentation/hooks/useSavedRepos';
+import { queryKeys } from '@/presentation/query/queryKeys';
 import { container } from 'src/infra/di/container';
 
 interface ToggleInput {
@@ -21,7 +21,7 @@ export function useToggleSaveRepo() {
       return true;
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: SAVED_REPOS_QUERY_KEY });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.savedRepos() });
     },
   });
 }

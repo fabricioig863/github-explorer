@@ -1,4 +1,5 @@
 import { useTheme } from '@shopify/restyle';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { useCallback } from 'react';
 import { FlatList, RefreshControl, type ListRenderItem } from 'react-native';
 
@@ -9,8 +10,7 @@ import { Skeleton } from '@/presentation/design-system/Skeleton';
 import { Box } from '@/presentation/design-system/primitives/Box';
 import { Spinner } from '@/presentation/design-system/primitives/Spinner';
 import { Text } from '@/presentation/design-system/primitives/Text';
-import { useIssues } from '@/presentation/hooks/useIssues';
-import { useOpenIssuesCount } from '@/presentation/hooks/useOpenIssuesCount';
+import { issueQueries } from '@/presentation/query/collections/issueQueries';
 import { getErrorMessage } from '@/presentation/utils/getErrorMessage';
 import type { RepoStackScreenProps } from 'src/infra/navigation/types';
 import type { Theme } from 'src/infra/theme/lightTheme';
@@ -30,9 +30,9 @@ export function IssuesScreen({ route }: Props) {
     hasNextPage,
     refetch,
     error,
-  } = useIssues({ owner, repo, state: 'open' });
+  } = useInfiniteQuery(issueQueries.list(owner, repo, 'open'));
 
-  const { data: totalCount } = useOpenIssuesCount({ owner, repo });
+  const { data: totalCount } = useQuery(issueQueries.openCount(owner, repo));
 
   const issues: Issue[] = data?.pages.flatMap((p) => p.items) ?? [];
   const loadedCount = issues.length;

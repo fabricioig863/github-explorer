@@ -1,4 +1,5 @@
 import { useTheme } from '@shopify/restyle';
+import { useInfiniteQuery } from '@tanstack/react-query';
 import { useCallback, useState } from 'react';
 import { FlatList, RefreshControl, type ListRenderItem } from 'react-native';
 
@@ -11,7 +12,7 @@ import { Box } from '@/presentation/design-system/primitives/Box';
 import { Spinner } from '@/presentation/design-system/primitives/Spinner';
 import { Text } from '@/presentation/design-system/primitives/Text';
 import { useDebounce } from '@/presentation/hooks/useDebounce';
-import { useSearchRepos } from '@/presentation/hooks/useSearchRepos';
+import { repoQueries } from '@/presentation/query/collections/repoQueries';
 import { getEmptySearchCopy } from '@/presentation/utils/getEmptySearchCopy';
 import { getErrorMessage } from '@/presentation/utils/getErrorMessage';
 import type { ExploreStackScreenProps } from 'src/infra/navigation/types';
@@ -38,7 +39,7 @@ export function SearchScreen({ navigation }: Props) {
     hasNextPage,
     refetch,
     error,
-  } = useSearchRepos({ query: debouncedQuery });
+  } = useInfiniteQuery(repoQueries.search(debouncedQuery));
 
   const repos: Repository[] = data?.pages.flatMap((p) => p.items) ?? [];
   const totalCount = data?.pages[0]?.totalCount;

@@ -2,7 +2,6 @@ import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 import type { ReactElement } from 'react';
 
 import { NetworkError } from '@/domain/errors/NetworkError';
-import * as useRepoDetailsModule from '@/presentation/hooks/useRepoDetails';
 import { RepoDetailScreen } from '@/presentation/screens/RepoDetailScreen';
 import { container } from 'src/infra/di/container';
 
@@ -257,18 +256,13 @@ describe('RepoDetailScreen', () => {
     await screen.findByText('Ver issues abertas');
   });
 
-  it('renders "Repositório não encontrado" when data resolves to undefined', async () => {
-    const spy = jest.spyOn(useRepoDetailsModule, 'useRepoDetails').mockReturnValue({
-      data: undefined,
-      isLoading: false,
-      error: null,
-      refetch: jest.fn(),
-    } as unknown as ReturnType<typeof useRepoDetailsModule.useRepoDetails>);
-
-    const { props } = makeProps();
+  it('renders "Repositório não encontrado" when there is no data (disabled query)', async () => {
+    // owner/repo vazios → repoQueries.details fica disabled → não há loading nem
+    // erro e data é undefined, disparando o branch "não encontrado" da tela.
+    const { props } = makeProps({ owner: '', repo: '' });
     renderWithProviders(<RepoDetailScreen {...props} />, { withNavigation: false });
 
     await screen.findByText('Repositório não encontrado');
-    spy.mockRestore();
+    expect(detailsMock).not.toHaveBeenCalled();
   });
 });

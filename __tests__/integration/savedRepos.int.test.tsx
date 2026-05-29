@@ -1,14 +1,13 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 
-import { useIsRepoSaved } from '@/presentation/hooks/useIsRepoSaved';
-import { useSavedRepos } from '@/presentation/hooks/useSavedRepos';
 import { useToggleSaveRepo } from '@/presentation/hooks/useToggleSaveRepo';
+import { savedQueries } from '@/presentation/query/collections/savedQueries';
 import { container } from 'src/infra/di/container';
 
 import { makeRepository } from '../test-utils/fixtures/repository.fixture';
 import { createTestQueryClient } from '../test-utils/renderWithProviders';
 
-const { QueryClientProvider } = require('@tanstack/react-query');
+const { QueryClientProvider, useQuery } = require('@tanstack/react-query');
 
 function makeWrapper() {
   const client = createTestQueryClient();
@@ -17,7 +16,7 @@ function makeWrapper() {
     createElement(QueryClientProvider, { client }, children);
 }
 
-describe('vertical slice: useSavedRepos + useToggleSaveRepo → use cases → InMemorySavedReposRepository', () => {
+describe('vertical slice: savedQueries + useToggleSaveRepo → use cases → InMemorySavedReposRepository', () => {
   // InMemorySavedReposRepository é singleton via container. Estado leak entre
   // testes — limpamos no beforeEach chamando o próprio use case (ponta-a-ponta).
   beforeEach(async () => {
@@ -26,9 +25,9 @@ describe('vertical slice: useSavedRepos + useToggleSaveRepo → use cases → In
   });
 
   describe('save → list', () => {
-    it('salvar um repo aparece em useSavedRepos após invalidação', async () => {
+    it('salvar um repo aparece na lista de salvos após invalidação', async () => {
       const wrapper = makeWrapper();
-      const listHook = renderHook(() => useSavedRepos(), { wrapper });
+      const listHook = renderHook(() => useQuery(savedQueries.list()), { wrapper });
       const toggleHook = renderHook(() => useToggleSaveRepo(), { wrapper });
 
       // useToggleSaveRepo precisa de um QueryClient compartilhado com o list
@@ -118,14 +117,16 @@ describe('vertical slice: useSavedRepos + useToggleSaveRepo → use cases → In
     });
   });
 
-  describe('useIsRepoSaved ponta-a-ponta', () => {
+  describe('savedQueries.isSaved ponta-a-ponta', () => {
     it('reflete o estado real do repositório após save', async () => {
       // Pré-popula via use case real (sem hook)
       await container.saveRepoUseCase.execute(makeRepository({ fullName: 'foo/bar' }));
 
       const wrapper = makeWrapper();
-      const isSavedHook = renderHook(() => useIsRepoSaved('foo/bar'), { wrapper });
-      const notSavedHook = renderHook(() => useIsRepoSaved('does/not-exist'), { wrapper });
+      const isSavedHook = renderHook(() => useQuery(savedQueries.isSaved('foo/bar')), { wrapper });
+      const notSavedHook = renderHook(() => useQuery(savedQueries.isSaved('does/not-exist')), {
+        wrapper,
+      });
 
       await waitFor(() => expect(isSavedHook.result.current.isSuccess).toBe(true), {
         timeout: 2000,

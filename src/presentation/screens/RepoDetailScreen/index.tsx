@@ -1,3 +1,4 @@
+import { useQuery } from '@tanstack/react-query';
 import { useLayoutEffect } from 'react';
 import { ScrollView } from 'react-native';
 
@@ -6,10 +7,10 @@ import { EmptyState } from '@/presentation/components/EmptyState';
 import { RateLimitBanner } from '@/presentation/components/RateLimitBanner';
 import { Button } from '@/presentation/design-system/Button';
 import { Box } from '@/presentation/design-system/primitives/Box';
-import { useIsRepoSaved } from '@/presentation/hooks/useIsRepoSaved';
-import { useOpenIssuesCount } from '@/presentation/hooks/useOpenIssuesCount';
-import { useRepoDetails } from '@/presentation/hooks/useRepoDetails';
 import { useToggleSaveRepo } from '@/presentation/hooks/useToggleSaveRepo';
+import { issueQueries } from '@/presentation/query/collections/issueQueries';
+import { repoQueries } from '@/presentation/query/collections/repoQueries';
+import { savedQueries } from '@/presentation/query/collections/savedQueries';
 import { getErrorMessage } from '@/presentation/utils/getErrorMessage';
 import type { RepoStackScreenProps } from 'src/infra/navigation/types';
 
@@ -25,9 +26,9 @@ export function RepoDetailScreen({ route, navigation }: Props) {
   const { owner, repo } = route.params;
   const fullName = `${owner}/${repo}`;
 
-  const { data, isLoading, error, refetch } = useRepoDetails({ owner, repo });
-  const { data: openIssuesCount } = useOpenIssuesCount({ owner, repo });
-  const { data: isSaved = false } = useIsRepoSaved(fullName);
+  const { data, isLoading, error, refetch } = useQuery(repoQueries.details(owner, repo));
+  const { data: openIssuesCount } = useQuery(issueQueries.openCount(owner, repo));
+  const { data: isSaved = false } = useQuery(savedQueries.isSaved(fullName));
   const toggleSave = useToggleSaveRepo();
 
   useLayoutEffect(() => {
