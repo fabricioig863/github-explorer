@@ -22,6 +22,7 @@ module.exports = defineConfig([
       ],
     },
     rules: {
+      'no-void': ['warn', { allowAsStatement: true }],
       '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/no-unused-vars': 'error',
       '@typescript-eslint/consistent-type-imports': 'error',
