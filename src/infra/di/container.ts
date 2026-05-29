@@ -9,43 +9,45 @@ import { UnsaveRepoUseCase } from '@/application/use-cases/UnsaveRepoUseCase';
 import type { IIssueRepository } from '@/domain/repositories/IIssueRepository';
 import type { IRepoRepository } from '@/domain/repositories/IRepoRepository';
 import type { ISavedReposRepository } from '@/domain/repositories/ISavedReposRepository';
-import { AsyncStorageSavedReposRepository } from 'src/infra/repositories/AsyncStorageSavedReposRepository';
-import { GitHubIssueRepository } from 'src/infra/repositories/GitHubIssueRepository';
-import { GitHubRepoRepository } from 'src/infra/repositories/GitHubRepoRepository';
-import { InMemoryIssueRepository } from 'src/infra/repositories/InMemoryIssueRepository';
-import { InMemoryRepoRepository } from 'src/infra/repositories/InMemoryRepoRepository';
-import { InMemorySavedReposRepository } from 'src/infra/repositories/InMemorySavedReposRepository';
+import {
+  provideIssueRepository,
+  provideRepoRepository,
+  provideSavedReposRepository,
+  readDiEnv,
+} from 'src/infra/di/providers';
 
-const USE_MOCK = process.env.EXPO_PUBLIC_USE_MOCK !== 'false';
-
-function buildRepoRepository(): IRepoRepository {
-  if (USE_MOCK) return new InMemoryRepoRepository();
-  return new GitHubRepoRepository();
+export interface ContainerDeps {
+  repoRepository: IRepoRepository;
+  issueRepository: IIssueRepository;
+  savedReposRepository: ISavedReposRepository;
 }
 
-function buildIssueRepository(): IIssueRepository {
-  if (USE_MOCK) return new InMemoryIssueRepository();
-  return new GitHubIssueRepository();
+export interface Container {
+  searchReposUseCase: SearchReposUseCase;
+  getRepoDetailsUseCase: GetRepoDetailsUseCase;
+  listIssuesUseCase: ListIssuesUseCase;
+  countOpenIssuesUseCase: CountOpenIssuesUseCase;
+  listSavedReposUseCase: ListSavedReposUseCase;
+  saveRepoUseCase: SaveRepoUseCase;
+  unsaveRepoUseCase: UnsaveRepoUseCase;
+  isRepoSavedUseCase: IsRepoSavedUseCase;
 }
 
-function buildSavedReposRepository(): ISavedReposRepository {
-  if (USE_MOCK) return new InMemorySavedReposRepository();
-  return new AsyncStorageSavedReposRepository();
-}
+export const createContainer = (deps: ContainerDeps): Container => ({
+  searchReposUseCase: new SearchReposUseCase(deps.repoRepository),
+  getRepoDetailsUseCase: new GetRepoDetailsUseCase(deps.repoRepository),
+  listIssuesUseCase: new ListIssuesUseCase(deps.issueRepository),
+  countOpenIssuesUseCase: new CountOpenIssuesUseCase(deps.issueRepository),
+  listSavedReposUseCase: new ListSavedReposUseCase(deps.savedReposRepository),
+  saveRepoUseCase: new SaveRepoUseCase(deps.savedReposRepository),
+  unsaveRepoUseCase: new UnsaveRepoUseCase(deps.savedReposRepository),
+  isRepoSavedUseCase: new IsRepoSavedUseCase(deps.savedReposRepository),
+});
 
-const repoRepository = buildRepoRepository();
-const issueRepository = buildIssueRepository();
-const savedReposRepository = buildSavedReposRepository();
+const env = readDiEnv();
 
-export const container = {
-  searchReposUseCase: new SearchReposUseCase(repoRepository),
-  getRepoDetailsUseCase: new GetRepoDetailsUseCase(repoRepository),
-  listIssuesUseCase: new ListIssuesUseCase(issueRepository),
-  countOpenIssuesUseCase: new CountOpenIssuesUseCase(issueRepository),
-  listSavedReposUseCase: new ListSavedReposUseCase(savedReposRepository),
-  saveRepoUseCase: new SaveRepoUseCase(savedReposRepository),
-  unsaveRepoUseCase: new UnsaveRepoUseCase(savedReposRepository),
-  isRepoSavedUseCase: new IsRepoSavedUseCase(savedReposRepository),
-} as const;
-
-export type Container = typeof container;
+export const container: Container = createContainer({
+  repoRepository: provideRepoRepository(env),
+  issueRepository: provideIssueRepository(env),
+  savedReposRepository: provideSavedReposRepository(env),
+});
