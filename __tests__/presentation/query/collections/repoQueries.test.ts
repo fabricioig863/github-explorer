@@ -1,7 +1,16 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import {
+  QueryClient,
+  QueryClientProvider,
+  useInfiniteQuery,
+  useQuery,
+} from '@tanstack/react-query';
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 import { createElement, type ReactNode } from 'react';
+
+import { repoQueries } from '@/presentation/query/collections/repoQueries';
+import { container } from 'src/infra/di/container';
+
+import { makeRepository } from '../../../test-utils/fixtures/repository.fixture';
 
 jest.mock('src/infra/di/container', () => ({
   container: {
@@ -9,11 +18,6 @@ jest.mock('src/infra/di/container', () => ({
     getRepoDetailsUseCase: { execute: jest.fn() },
   },
 }));
-
-import { repoQueries } from '@/presentation/query/collections/repoQueries';
-import { container } from 'src/infra/di/container';
-
-import { makeRepository } from '../../../test-utils/fixtures/repository.fixture';
 
 const searchMock = container.searchReposUseCase.execute as jest.Mock;
 const detailsMock = container.getRepoDetailsUseCase.execute as jest.Mock;

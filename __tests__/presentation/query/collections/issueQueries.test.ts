@@ -1,7 +1,16 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import {
+  QueryClient,
+  QueryClientProvider,
+  useInfiniteQuery,
+  useQuery,
+} from '@tanstack/react-query';
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 import { createElement, type ReactNode } from 'react';
+
+import { issueQueries } from '@/presentation/query/collections/issueQueries';
+import { container } from 'src/infra/di/container';
+
+import { makeIssue } from '../../../test-utils/fixtures/issue.fixture';
 
 jest.mock('src/infra/di/container', () => ({
   container: {
@@ -9,11 +18,6 @@ jest.mock('src/infra/di/container', () => ({
     countOpenIssuesUseCase: { execute: jest.fn() },
   },
 }));
-
-import { issueQueries } from '@/presentation/query/collections/issueQueries';
-import { container } from 'src/infra/di/container';
-
-import { makeIssue } from '../../../test-utils/fixtures/issue.fixture';
 
 const listMock = container.listIssuesUseCase.execute as jest.Mock;
 const countMock = container.countOpenIssuesUseCase.execute as jest.Mock;

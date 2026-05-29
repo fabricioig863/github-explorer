@@ -1,7 +1,11 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useQuery } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react-native';
 import { createElement, type ReactNode } from 'react';
+
+import { savedQueries } from '@/presentation/query/collections/savedQueries';
+import { container } from 'src/infra/di/container';
+
+import { makeSavedRepo } from '../../../test-utils/fixtures/savedRepo.fixture';
 
 jest.mock('src/infra/di/container', () => ({
   container: {
@@ -9,11 +13,6 @@ jest.mock('src/infra/di/container', () => ({
     isRepoSavedUseCase: { execute: jest.fn() },
   },
 }));
-
-import { savedQueries } from '@/presentation/query/collections/savedQueries';
-import { container } from 'src/infra/di/container';
-
-import { makeSavedRepo } from '../../../test-utils/fixtures/savedRepo.fixture';
 
 const listMock = container.listSavedReposUseCase.execute as jest.Mock;
 const isSavedMock = container.isRepoSavedUseCase.execute as jest.Mock;
