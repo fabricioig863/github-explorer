@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(yarn jest *)",
+      "Bash(git push *)",
+      "Bash(cd /Users/fabricio/projects/github-explorer *)",
+      "Bash(pnpm typecheck *)",
+      "Bash(pnpm lint *)",
+      "Bash(pnpm test:coverage)"
+    ],
+    "additionalDirectories": [
+      "/Users/fabricio/projects/github-explorer/src/presentation/hooks"
+    ]
+  }
+}
