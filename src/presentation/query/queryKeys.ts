@@ -1,12 +1,5 @@
 import type { QueryKey } from '@tanstack/react-query';
 
-/**
- * Fonte única de query keys do app.
- * Consumida pelas query collections e pela mutation de toggle (invalidate).
- *
- * `isRepoSaved` herda o prefixo de `savedRepos` de propósito: assim
- * invalidar `savedRepos()` também invalida os `isSaved` derivados.
- */
 export const queryKeys = {
   searchRepos: (query: string): QueryKey => ['searchRepos', query],
   repoDetails: (owner: string, repo: string): QueryKey => ['repoDetails', owner, repo],

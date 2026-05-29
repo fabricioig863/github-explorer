@@ -17,8 +17,6 @@ function makeWrapper() {
 }
 
 describe('vertical slice: savedQueries + useToggleSaveRepo → use cases → InMemorySavedReposRepository', () => {
-  // InMemorySavedReposRepository é singleton via container. Estado leak entre
-  // testes — limpamos no beforeEach chamando o próprio use case (ponta-a-ponta).
   beforeEach(async () => {
     const all = await container.listSavedReposUseCase.execute();
     await Promise.all(all.map((r) => container.unsaveRepoUseCase.execute(r.fullName)));
@@ -30,11 +28,6 @@ describe('vertical slice: savedQueries + useToggleSaveRepo → use cases → InM
       const listHook = renderHook(() => useQuery(savedQueries.list()), { wrapper });
       const toggleHook = renderHook(() => useToggleSaveRepo(), { wrapper });
 
-      // useToggleSaveRepo precisa de um QueryClient compartilhado com o list
-      // para invalidação cross-hook. Aqui cada renderHook cria seu próprio
-      // client — invalidação não cruza. Por isso o teste valida diretamente
-      // a propagação via container, não via cache. Os dois hooks aqui
-      // exercitam pontos de entrada diferentes da mesma slice.
       await waitFor(() => expect(listHook.result.current.isSuccess).toBe(true), { timeout: 2000 });
       expect(listHook.result.current.data).toEqual([]);
 
@@ -45,7 +38,6 @@ describe('vertical slice: savedQueries + useToggleSaveRepo → use cases → InM
         });
       });
 
-      // Refetch direto pelo container — comprova que o repo persistiu de fato.
       const persisted = await container.listSavedReposUseCase.execute();
       expect(persisted).toHaveLength(1);
       expect(persisted[0]?.fullName).toBe('facebook/react-native');
@@ -61,7 +53,6 @@ describe('vertical slice: savedQueries + useToggleSaveRepo → use cases → InM
           isCurrentlySaved: false,
         });
       });
-      // pequena pausa para que savedAt difira entre as duas chamadas
       await new Promise((r) => setTimeout(r, 5));
       await act(async () => {
         await toggleHook.result.current.mutateAsync({
@@ -74,7 +65,6 @@ describe('vertical slice: savedQueries + useToggleSaveRepo → use cases → InM
       expect(list).toHaveLength(2);
       expect(list[0]?.fullName).toBe('b/second');
       expect(list[1]?.fullName).toBe('a/first');
-      // savedAt é Date no domínio
       expect(list[0]?.savedAt).toBeInstanceOf(Date);
       expect(list[0]!.savedAt.getTime()).toBeGreaterThanOrEqual(list[1]!.savedAt.getTime());
     });
@@ -119,7 +109,6 @@ describe('vertical slice: savedQueries + useToggleSaveRepo → use cases → InM
 
   describe('savedQueries.isSaved ponta-a-ponta', () => {
     it('reflete o estado real do repositório após save', async () => {
-      // Pré-popula via use case real (sem hook)
       await container.saveRepoUseCase.execute(makeRepository({ fullName: 'foo/bar' }));
 
       const wrapper = makeWrapper();

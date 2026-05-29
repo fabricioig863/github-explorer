@@ -34,8 +34,6 @@ describe('IsRepoSavedUseCase', () => {
     });
   });
 
-  // defaults: N/A
-
   describe('pass-through de retorno', () => {
     it.each([
       ['true', true],

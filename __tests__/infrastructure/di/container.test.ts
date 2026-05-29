@@ -1,17 +1,9 @@
 import type { Container } from 'src/infra/di/container';
 
-// `private readonly repoRepository` em TS é só type-level — a propriedade existe
-// como atributo público no runtime. `Reflect.get` permite inspecionar sem cast
-// proibido (`as unknown as X`); a anotação `: unknown` restringe o `any` que
-// `Reflect.get` retornaria.
 function readRepo(useCase: object, key: string): unknown {
   return Reflect.get(useCase, key);
 }
 
-// `jest.isolateModules` re-avalia o módulo, criando uma NOVA referência da classe.
-// `instanceof` contra a classe importada no topo do arquivo falha porque é uma
-// instância diferente da mesma classe. Comparar por `constructor.name` evita
-// o false negative e ainda valida que a categoria correta foi instanciada.
 function repoClassNameOf(value: unknown): string | undefined {
   if (value === null || typeof value !== 'object') return undefined;
   const proto = Object.getPrototypeOf(value) as unknown;
@@ -56,7 +48,6 @@ describe('container DI', () => {
       expect(c.unsaveRepoUseCase).toBeDefined();
       expect(c.isRepoSavedUseCase).toBeDefined();
 
-      // Cada use case expõe execute()
       expect(typeof c.searchReposUseCase.execute).toBe('function');
       expect(typeof c.getRepoDetailsUseCase.execute).toBe('function');
       expect(typeof c.listIssuesUseCase.execute).toBe('function');

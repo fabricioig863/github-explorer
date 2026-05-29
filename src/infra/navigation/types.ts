@@ -2,11 +2,6 @@ import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { CompositeScreenProps, NavigatorScreenParams } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
-/**
- * Rotas de detalhe de repositório. Vivem nas duas pilhas (Explore e Saved):
- * as telas RepoDetail e Issues são registradas em ambas e tipadas contra
- * este subconjunto compartilhado.
- */
 export type RepoStackParamList = {
   RepoDetail: { owner: string; repo: string };
   Issues: { owner: string; repo: string };
@@ -35,7 +30,6 @@ export type SavedStackScreenProps<T extends keyof SavedStackParamList> = Composi
   BottomTabScreenProps<TabsParamList>
 >;
 
-/** Props das telas compartilhadas entre as pilhas Explore e Saved. */
 export type RepoStackScreenProps<T extends keyof RepoStackParamList> = NativeStackScreenProps<
   RepoStackParamList,
   T

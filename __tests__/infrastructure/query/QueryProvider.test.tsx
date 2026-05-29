@@ -7,7 +7,6 @@ import { queryClient } from 'src/infra/query/queryClient';
 
 function ClientProbe() {
   const client = useQueryClient();
-  // expõe a referência via testID + nome para asserção pelo teste
   return <Text testID="probe-client">{client === queryClient ? 'singleton' : 'other'}</Text>;
 }
 

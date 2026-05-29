@@ -38,9 +38,6 @@ describe('httpClient (integração HTTP via msw)', () => {
   });
 
   describe('autenticação via EXPO_PUBLIC_GITHUB_TOKEN', () => {
-    // `createHttpClient` lê `process.env.EXPO_PUBLIC_GITHUB_TOKEN` dentro do
-    // corpo da função (não no module-load), então basta mutar process.env
-    // antes de cada chamada à factory. Sem `jest.isolateModules` necessário.
     const ORIGINAL_TOKEN = process.env.EXPO_PUBLIC_GITHUB_TOKEN;
 
     afterEach(() => {

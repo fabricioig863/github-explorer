@@ -1,21 +1,19 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 
-jest.mock('src/infra/di/container', () => ({
-  container: {
-    saveRepoUseCase: { execute: jest.fn() },
-    unsaveRepoUseCase: { execute: jest.fn() },
-    // Use cases não relacionados ao toggle mas referenciados por hooks
-    // co-localizados na presentation. Mantidos para evitar quebrar imports.
-    listSavedReposUseCase: { execute: jest.fn() },
-    isRepoSavedUseCase: { execute: jest.fn() },
-  },
-}));
-
 import { useToggleSaveRepo } from '@/presentation/hooks/useToggleSaveRepo';
 import { container } from 'src/infra/di/container';
 
 import { makeRepository } from '../../test-utils/fixtures/repository.fixture';
 import { createTestQueryClient } from '../../test-utils/renderWithProviders';
+
+jest.mock('src/infra/di/container', () => ({
+  container: {
+    saveRepoUseCase: { execute: jest.fn() },
+    unsaveRepoUseCase: { execute: jest.fn() },
+    listSavedReposUseCase: { execute: jest.fn() },
+    isRepoSavedUseCase: { execute: jest.fn() },
+  },
+}));
 
 const saveMock = container.saveRepoUseCase.execute as jest.Mock;
 const unsaveMock = container.unsaveRepoUseCase.execute as jest.Mock;
@@ -24,8 +22,6 @@ function makeWrapper() {
   const client = createTestQueryClient();
   const invalidateSpy = jest.spyOn(client, 'invalidateQueries');
 
-  // QueryClientProvider import dynamic para evitar referência fora do escopo
-  // de cada teste.
   const { QueryClientProvider } = require('@tanstack/react-query');
   const { createElement } = require('react');
   const Wrapper = ({ children }: { children: React.ReactNode }) =>
@@ -85,9 +81,7 @@ describe('useToggleSaveRepo', () => {
       });
     });
 
-    await waitFor(() =>
-      expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['savedRepos'] }),
-    );
+    await waitFor(() => expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['savedRepos'] }));
   });
 
   it('propaga erro do use case sem engolir', async () => {

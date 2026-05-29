@@ -7,10 +7,6 @@ import { makeRepository } from '../test-utils/fixtures/repository.fixture';
 import { makeSavedRepo } from '../test-utils/fixtures/savedRepo.fixture';
 
 describe('SaveRepoUseCase', () => {
-  // sanitização: o use case NÃO normaliza fullName (apenas checa que trim != '').
-  // Quem normaliza é o próprio Repository que vem da camada superior. Por isso
-  // não há teste de "trim aplicado" — apenas o teste de validação abaixo cobre o trim().
-
   describe('validação', () => {
     it('rejeita Repository com fullName só whitespace e não chama o repo', async () => {
       const repo = new FakeSavedReposRepository();
@@ -32,8 +28,6 @@ describe('SaveRepoUseCase', () => {
       expect(repo.save).not.toHaveBeenCalled();
     });
   });
-
-  // defaults: N/A — input é um Repository já completo
 
   describe('pass-through de retorno', () => {
     it('encaminha o Repository ao repo e devolve o SavedRepo do repo (referência preservada)', async () => {

@@ -257,8 +257,6 @@ describe('RepoDetailScreen', () => {
   });
 
   it('renders "Repositório não encontrado" when there is no data (disabled query)', async () => {
-    // owner/repo vazios → repoQueries.details fica disabled → não há loading nem
-    // erro e data é undefined, disparando o branch "não encontrado" da tela.
     const { props } = makeProps({ owner: '', repo: '' });
     renderWithProviders(<RepoDetailScreen {...props} />, { withNavigation: false });
 

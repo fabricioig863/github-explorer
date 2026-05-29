@@ -7,10 +7,6 @@ import { RateLimitError } from '@/domain/errors/RateLimitError';
 import { UnexpectedError } from '@/domain/errors/UnexpectedError';
 import { queryClient } from 'src/infra/query/queryClient';
 
-// `shouldRetry` é função privada do módulo. É exposta no runtime via
-// `defaultOptions.queries.retry` do QueryClient. Tipo do React Query aceita
-// boolean | number | (failureCount, error) => boolean. Para chamá-la em testes,
-// extraímos como union, com narrowing por `typeof === 'function'`.
 function getRetryFn(client: QueryClient): (count: number, err: unknown) => boolean {
   const retry = client.getDefaultOptions().queries?.retry;
   if (typeof retry !== 'function') {

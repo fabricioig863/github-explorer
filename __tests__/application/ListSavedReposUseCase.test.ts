@@ -5,8 +5,6 @@ import { FakeSavedReposRepository } from '../test-utils/fakes/FakeSavedReposRepo
 import { makeSavedRepo } from '../test-utils/fixtures/savedRepo.fixture';
 
 describe('ListSavedReposUseCase', () => {
-  // sanitização / validação / defaults: N/A — use case não tem input.
-
   describe('pass-through de retorno', () => {
     it('devolve o array do repo sem mutar (referência preservada)', async () => {
       const items = [

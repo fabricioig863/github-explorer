@@ -44,9 +44,6 @@ describe('GitHubIssueRepository (integração HTTP via msw)', () => {
         perPage: 20,
       });
 
-      // Decisão de design: /search/issues em vez de /repos/{owner}/{repo}/issues
-      // porque o endpoint REST mistura PRs com issues. A busca com type:issue
-      // filtra apenas issues reais.
       expect(capturedUrl?.pathname).toBe('/search/issues');
       expect(capturedUrl?.searchParams.get('q')).toBe('repo:foo/bar type:issue state:open');
       expect(capturedUrl?.searchParams.get('sort')).toBe('created');

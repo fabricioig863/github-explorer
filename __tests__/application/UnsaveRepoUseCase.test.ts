@@ -34,8 +34,6 @@ describe('UnsaveRepoUseCase', () => {
     });
   });
 
-  // defaults: N/A
-
   describe('pass-through de retorno', () => {
     it('resolve void (não retorna valor) e chama o repo exatamente uma vez', async () => {
       const repo = new FakeSavedReposRepository();
@@ -58,6 +56,4 @@ describe('UnsaveRepoUseCase', () => {
       await expect(useCase.execute('foo/bar')).rejects.toBe(err);
     });
   });
-
-  // não vaza tipos: void puro — coberto pelo pass-through acima
 });

@@ -41,8 +41,6 @@ describe('CountOpenIssuesUseCase', () => {
     });
   });
 
-  // defaults: N/A — input não tem campos opcionais com default
-
   describe('pass-through de retorno', () => {
     it.each([
       ['zero', 0],

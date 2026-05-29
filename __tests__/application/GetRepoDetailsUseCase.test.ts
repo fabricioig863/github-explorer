@@ -53,8 +53,6 @@ describe('GetRepoDetailsUseCase', () => {
     });
   });
 
-  // defaults: N/A — input não tem campos opcionais com default
-
   describe('pass-through de retorno', () => {
     it('devolve o Repository do repo sem mutar (referência preservada)', async () => {
       const expected = makeRepository({ fullName: 'foo/bar' });
