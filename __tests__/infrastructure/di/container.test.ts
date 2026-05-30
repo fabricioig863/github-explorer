@@ -1,52 +1,48 @@
-import type { Container } from 'src/infra/di/container';
+import type { IIssueRepository } from '@/domain/repositories/IIssueRepository';
+import type { IRepoRepository } from '@/domain/repositories/IRepoRepository';
+import type { ISavedReposRepository } from '@/domain/repositories/ISavedReposRepository';
+import { createContainer, type ContainerDeps } from 'src/infra/di/container';
 
-function readRepo(useCase: object, key: string): unknown {
+function fakeRepoRepository(): IRepoRepository {
+  return {
+    search: jest.fn(),
+    getDetails: jest.fn(),
+  } as unknown as IRepoRepository;
+}
+
+function fakeIssueRepository(): IIssueRepository {
+  return {
+    list: jest.fn(),
+    countOpen: jest.fn(),
+  } as unknown as IIssueRepository;
+}
+
+function fakeSavedReposRepository(): ISavedReposRepository {
+  return {
+    list: jest.fn(),
+    save: jest.fn(),
+    unsave: jest.fn(),
+    isSaved: jest.fn(),
+  } as unknown as ISavedReposRepository;
+}
+
+function makeDeps(overrides: Partial<ContainerDeps> = {}): ContainerDeps {
+  return {
+    repoRepository: fakeRepoRepository(),
+    issueRepository: fakeIssueRepository(),
+    savedReposRepository: fakeSavedReposRepository(),
+    ...overrides,
+  };
+}
+
+function readInjectedRepo(useCase: object, key: string): unknown {
   return Reflect.get(useCase, key);
 }
 
-function repoClassNameOf(value: unknown): string | undefined {
-  if (value === null || typeof value !== 'object') return undefined;
-  const proto = Object.getPrototypeOf(value) as unknown;
-  if (proto === null || typeof proto !== 'object') return undefined;
-  const ctor = Reflect.get(proto, 'constructor');
-  if (typeof ctor !== 'function') return undefined;
-  return ctor.name;
-}
-
-function loadContainerWith(envValue: string | undefined): Container {
-  const original = process.env.EXPO_PUBLIC_USE_MOCK;
-  if (envValue === undefined) {
-    delete process.env.EXPO_PUBLIC_USE_MOCK;
-  } else {
-    process.env.EXPO_PUBLIC_USE_MOCK = envValue;
-  }
-
-  let container!: Container;
-  jest.isolateModules(() => {
-    container = require('src/infra/di/bootstrap').container as Container;
-  });
-
-  if (original === undefined) {
-    delete process.env.EXPO_PUBLIC_USE_MOCK;
-  } else {
-    process.env.EXPO_PUBLIC_USE_MOCK = original;
-  }
-  return container;
-}
-
-describe('container DI', () => {
-  describe('shape: registro de todos os use cases', () => {
-    it('expõe os 8 use cases esperados, nenhum undefined', () => {
-      const c = loadContainerWith(undefined);
-
-      expect(c.searchReposUseCase).toBeDefined();
-      expect(c.getRepoDetailsUseCase).toBeDefined();
-      expect(c.listIssuesUseCase).toBeDefined();
-      expect(c.countOpenIssuesUseCase).toBeDefined();
-      expect(c.listSavedReposUseCase).toBeDefined();
-      expect(c.saveRepoUseCase).toBeDefined();
-      expect(c.unsaveRepoUseCase).toBeDefined();
-      expect(c.isRepoSavedUseCase).toBeDefined();
+describe('createContainer', () => {
+  describe('shape', () => {
+    it('expõe os 8 use cases esperados, todos com método execute', () => {
+      const c = createContainer(makeDeps());
 
       expect(typeof c.searchReposUseCase.execute).toBe('function');
       expect(typeof c.getRepoDetailsUseCase.execute).toBe('function');
@@ -59,86 +55,54 @@ describe('container DI', () => {
     });
   });
 
-  describe('USE_MOCK=true (default) → adapters In-Memory', () => {
-    it.each([
-      ['EXPO_PUBLIC_USE_MOCK undefined', undefined],
-      ['EXPO_PUBLIC_USE_MOCK = "true"', 'true'],
-      ['EXPO_PUBLIC_USE_MOCK = "anything-but-false"', 'yes'],
-    ])('com %s, use cases recebem InMemory* repos', (_label, env) => {
-      const c = loadContainerWith(env);
+  describe('injeção de dependência', () => {
+    it('use cases recebem exatamente os repositórios passados em deps', () => {
+      const deps = makeDeps();
+      const c = createContainer(deps);
 
-      expect(repoClassNameOf(readRepo(c.searchReposUseCase, 'repoRepository'))).toBe(
-        'InMemoryRepoRepository',
-      );
-      expect(repoClassNameOf(readRepo(c.getRepoDetailsUseCase, 'repoRepository'))).toBe(
-        'InMemoryRepoRepository',
+      expect(readInjectedRepo(c.searchReposUseCase, 'repoRepository')).toBe(deps.repoRepository);
+      expect(readInjectedRepo(c.getRepoDetailsUseCase, 'repoRepository')).toBe(deps.repoRepository);
+
+      expect(readInjectedRepo(c.listIssuesUseCase, 'issueRepository')).toBe(deps.issueRepository);
+      expect(readInjectedRepo(c.countOpenIssuesUseCase, 'issueRepository')).toBe(
+        deps.issueRepository,
       );
 
-      expect(repoClassNameOf(readRepo(c.listIssuesUseCase, 'issueRepository'))).toBe(
-        'InMemoryIssueRepository',
+      expect(readInjectedRepo(c.listSavedReposUseCase, 'savedReposRepository')).toBe(
+        deps.savedReposRepository,
       );
-      expect(repoClassNameOf(readRepo(c.countOpenIssuesUseCase, 'issueRepository'))).toBe(
-        'InMemoryIssueRepository',
+      expect(readInjectedRepo(c.saveRepoUseCase, 'savedReposRepository')).toBe(
+        deps.savedReposRepository,
       );
-
-      expect(repoClassNameOf(readRepo(c.listSavedReposUseCase, 'savedReposRepository'))).toBe(
-        'InMemorySavedReposRepository',
+      expect(readInjectedRepo(c.unsaveRepoUseCase, 'savedReposRepository')).toBe(
+        deps.savedReposRepository,
       );
-      expect(repoClassNameOf(readRepo(c.saveRepoUseCase, 'savedReposRepository'))).toBe(
-        'InMemorySavedReposRepository',
-      );
-      expect(repoClassNameOf(readRepo(c.unsaveRepoUseCase, 'savedReposRepository'))).toBe(
-        'InMemorySavedReposRepository',
-      );
-      expect(repoClassNameOf(readRepo(c.isRepoSavedUseCase, 'savedReposRepository'))).toBe(
-        'InMemorySavedReposRepository',
+      expect(readInjectedRepo(c.isRepoSavedUseCase, 'savedReposRepository')).toBe(
+        deps.savedReposRepository,
       );
     });
 
-    it('use cases que compartilham a mesma interface compartilham a mesma instância de repo (não duplica)', () => {
-      const c = loadContainerWith(undefined);
+    it('use cases que compartilham mesma interface compartilham a mesma instância (não duplica)', () => {
+      const c = createContainer(makeDeps());
 
-      expect(readRepo(c.searchReposUseCase, 'repoRepository')).toBe(
-        readRepo(c.getRepoDetailsUseCase, 'repoRepository'),
+      expect(readInjectedRepo(c.searchReposUseCase, 'repoRepository')).toBe(
+        readInjectedRepo(c.getRepoDetailsUseCase, 'repoRepository'),
       );
-      expect(readRepo(c.listIssuesUseCase, 'issueRepository')).toBe(
-        readRepo(c.countOpenIssuesUseCase, 'issueRepository'),
+      expect(readInjectedRepo(c.listIssuesUseCase, 'issueRepository')).toBe(
+        readInjectedRepo(c.countOpenIssuesUseCase, 'issueRepository'),
       );
-      expect(readRepo(c.saveRepoUseCase, 'savedReposRepository')).toBe(
-        readRepo(c.listSavedReposUseCase, 'savedReposRepository'),
+      expect(readInjectedRepo(c.saveRepoUseCase, 'savedReposRepository')).toBe(
+        readInjectedRepo(c.listSavedReposUseCase, 'savedReposRepository'),
       );
     });
-  });
 
-  describe('USE_MOCK=false → adapters reais (GitHub HTTP + AsyncStorage)', () => {
-    it('com EXPO_PUBLIC_USE_MOCK="false", use cases recebem GitHubRepoRepository / GitHubIssueRepository / AsyncStorageSavedReposRepository', () => {
-      const c = loadContainerWith('false');
+    it('chamadas independentes produzem containers independentes (sem estado global)', () => {
+      const a = createContainer(makeDeps());
+      const b = createContainer(makeDeps());
 
-      expect(repoClassNameOf(readRepo(c.searchReposUseCase, 'repoRepository'))).toBe(
-        'GitHubRepoRepository',
-      );
-      expect(repoClassNameOf(readRepo(c.getRepoDetailsUseCase, 'repoRepository'))).toBe(
-        'GitHubRepoRepository',
-      );
-
-      expect(repoClassNameOf(readRepo(c.listIssuesUseCase, 'issueRepository'))).toBe(
-        'GitHubIssueRepository',
-      );
-      expect(repoClassNameOf(readRepo(c.countOpenIssuesUseCase, 'issueRepository'))).toBe(
-        'GitHubIssueRepository',
-      );
-
-      expect(repoClassNameOf(readRepo(c.listSavedReposUseCase, 'savedReposRepository'))).toBe(
-        'AsyncStorageSavedReposRepository',
-      );
-      expect(repoClassNameOf(readRepo(c.saveRepoUseCase, 'savedReposRepository'))).toBe(
-        'AsyncStorageSavedReposRepository',
-      );
-      expect(repoClassNameOf(readRepo(c.unsaveRepoUseCase, 'savedReposRepository'))).toBe(
-        'AsyncStorageSavedReposRepository',
-      );
-      expect(repoClassNameOf(readRepo(c.isRepoSavedUseCase, 'savedReposRepository'))).toBe(
-        'AsyncStorageSavedReposRepository',
+      expect(a.searchReposUseCase).not.toBe(b.searchReposUseCase);
+      expect(readInjectedRepo(a.searchReposUseCase, 'repoRepository')).not.toBe(
+        readInjectedRepo(b.searchReposUseCase, 'repoRepository'),
       );
     });
   });
