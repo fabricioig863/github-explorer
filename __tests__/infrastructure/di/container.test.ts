@@ -23,7 +23,7 @@ function loadContainerWith(envValue: string | undefined): Container {
 
   let container!: Container;
   jest.isolateModules(() => {
-    container = require('src/infra/di/container').container as Container;
+    container = require('src/infra/di/bootstrap').container as Container;
   });
 
   if (original === undefined) {

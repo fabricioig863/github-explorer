@@ -1,12 +1,12 @@
 import { screen } from '@testing-library/react-native';
 
 import { IssuesScreen } from '@/presentation/screens/IssuesScreen';
-import { container } from 'src/infra/di/container';
+import { container } from 'src/infra/di/bootstrap';
 
 import { makeIssue } from '../../test-utils/fixtures/issue.fixture';
 import { renderWithProviders } from '../../test-utils/renderWithProviders';
 
-jest.mock('src/infra/di/container', () => ({
+jest.mock('src/infra/di/bootstrap', () => ({
   container: {
     searchReposUseCase: { execute: jest.fn() },
     getRepoDetailsUseCase: { execute: jest.fn() },

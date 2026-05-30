@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import type { Repository } from '@/domain/entities/Repository';
 import { queryKeys } from '@/presentation/query/queryKeys';
-import { container } from 'src/infra/di/container';
+import { container } from 'src/infra/di/bootstrap';
 
 interface ToggleInput {
   repo: Repository;

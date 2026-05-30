@@ -2,7 +2,7 @@ import { queryOptions } from '@tanstack/react-query';
 
 import { paginatedQueryOptions } from '@/presentation/query/factories';
 import { queryKeys } from '@/presentation/query/queryKeys';
-import { container } from 'src/infra/di/container';
+import { container } from 'src/infra/di/bootstrap';
 
 const PER_PAGE = 20;
 const FIVE_MINUTES_MS = 5 * 60 * 1000;

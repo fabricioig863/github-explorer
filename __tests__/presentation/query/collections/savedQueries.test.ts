@@ -3,11 +3,11 @@ import { renderHook, waitFor } from '@testing-library/react-native';
 import { createElement, type ReactNode } from 'react';
 
 import { savedQueries } from '@/presentation/query/collections/savedQueries';
-import { container } from 'src/infra/di/container';
+import { container } from 'src/infra/di/bootstrap';
 
 import { makeSavedRepo } from '../../../test-utils/fixtures/savedRepo.fixture';
 
-jest.mock('src/infra/di/container', () => ({
+jest.mock('src/infra/di/bootstrap', () => ({
   container: {
     listSavedReposUseCase: { execute: jest.fn() },
     isRepoSavedUseCase: { execute: jest.fn() },

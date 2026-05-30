@@ -1,12 +1,12 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 
 import { SavedScreen } from '@/presentation/screens/SavedScreen';
-import { container } from 'src/infra/di/container';
+import { container } from 'src/infra/di/bootstrap';
 
 import { makeSavedRepo } from '../../test-utils/fixtures/savedRepo.fixture';
 import { renderWithProviders } from '../../test-utils/renderWithProviders';
 
-jest.mock('src/infra/di/container', () => ({
+jest.mock('src/infra/di/bootstrap', () => ({
   container: {
     searchReposUseCase: { execute: jest.fn() },
     getRepoDetailsUseCase: { execute: jest.fn() },

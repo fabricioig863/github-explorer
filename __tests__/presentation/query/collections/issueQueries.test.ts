@@ -8,11 +8,11 @@ import { act, renderHook, waitFor } from '@testing-library/react-native';
 import { createElement, type ReactNode } from 'react';
 
 import { issueQueries } from '@/presentation/query/collections/issueQueries';
-import { container } from 'src/infra/di/container';
+import { container } from 'src/infra/di/bootstrap';
 
 import { makeIssue } from '../../../test-utils/fixtures/issue.fixture';
 
-jest.mock('src/infra/di/container', () => ({
+jest.mock('src/infra/di/bootstrap', () => ({
   container: {
     listIssuesUseCase: { execute: jest.fn() },
     countOpenIssuesUseCase: { execute: jest.fn() },

@@ -2,7 +2,7 @@ import { queryOptions } from '@tanstack/react-query';
 
 import type { SavedRepo } from '@/domain/entities/SavedRepo';
 import { queryKeys } from '@/presentation/query/queryKeys';
-import { container } from 'src/infra/di/container';
+import { container } from 'src/infra/di/bootstrap';
 
 export const savedQueries = {
   list: () =>

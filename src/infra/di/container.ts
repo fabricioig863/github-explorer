@@ -9,12 +9,6 @@ import { UnsaveRepoUseCase } from '@/application/use-cases/UnsaveRepoUseCase';
 import type { IIssueRepository } from '@/domain/repositories/IIssueRepository';
 import type { IRepoRepository } from '@/domain/repositories/IRepoRepository';
 import type { ISavedReposRepository } from '@/domain/repositories/ISavedReposRepository';
-import {
-  provideIssueRepository,
-  provideRepoRepository,
-  provideSavedReposRepository,
-  readDiEnv,
-} from 'src/infra/di/providers';
 
 export interface ContainerDeps {
   repoRepository: IRepoRepository;
@@ -42,12 +36,4 @@ export const createContainer = (deps: ContainerDeps): Container => ({
   saveRepoUseCase: new SaveRepoUseCase(deps.savedReposRepository),
   unsaveRepoUseCase: new UnsaveRepoUseCase(deps.savedReposRepository),
   isRepoSavedUseCase: new IsRepoSavedUseCase(deps.savedReposRepository),
-});
-
-const env = readDiEnv();
-
-export const container: Container = createContainer({
-  repoRepository: provideRepoRepository(env),
-  issueRepository: provideIssueRepository(env),
-  savedReposRepository: provideSavedReposRepository(env),
 });

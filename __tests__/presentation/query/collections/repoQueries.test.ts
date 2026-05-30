@@ -8,11 +8,11 @@ import { act, renderHook, waitFor } from '@testing-library/react-native';
 import { createElement, type ReactNode } from 'react';
 
 import { repoQueries } from '@/presentation/query/collections/repoQueries';
-import { container } from 'src/infra/di/container';
+import { container } from 'src/infra/di/bootstrap';
 
 import { makeRepository } from '../../../test-utils/fixtures/repository.fixture';
 
-jest.mock('src/infra/di/container', () => ({
+jest.mock('src/infra/di/bootstrap', () => ({
   container: {
     searchReposUseCase: { execute: jest.fn() },
     getRepoDetailsUseCase: { execute: jest.fn() },

@@ -2,7 +2,7 @@ import { act, renderHook, waitFor } from '@testing-library/react-native';
 
 import type { Repository } from '@/domain/entities/Repository';
 import { repoQueries } from '@/presentation/query/collections/repoQueries';
-import { container } from 'src/infra/di/container';
+import { container } from 'src/infra/di/bootstrap';
 
 import { createTestQueryClient } from '../test-utils/renderWithProviders';
 

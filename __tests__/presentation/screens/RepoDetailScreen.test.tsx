@@ -3,12 +3,12 @@ import type { ReactElement } from 'react';
 
 import { NetworkError } from '@/domain/errors/NetworkError';
 import { RepoDetailScreen } from '@/presentation/screens/RepoDetailScreen';
-import { container } from 'src/infra/di/container';
+import { container } from 'src/infra/di/bootstrap';
 
 import { makeRepository } from '../../test-utils/fixtures/repository.fixture';
 import { renderWithProviders } from '../../test-utils/renderWithProviders';
 
-jest.mock('src/infra/di/container', () => ({
+jest.mock('src/infra/di/bootstrap', () => ({
   container: {
     searchReposUseCase: { execute: jest.fn() },
     getRepoDetailsUseCase: { execute: jest.fn() },

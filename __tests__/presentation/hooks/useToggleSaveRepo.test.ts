@@ -1,12 +1,12 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 
 import { useToggleSaveRepo } from '@/presentation/hooks/useToggleSaveRepo';
-import { container } from 'src/infra/di/container';
+import { container } from 'src/infra/di/bootstrap';
 
 import { makeRepository } from '../../test-utils/fixtures/repository.fixture';
 import { createTestQueryClient } from '../../test-utils/renderWithProviders';
 
-jest.mock('src/infra/di/container', () => ({
+jest.mock('src/infra/di/bootstrap', () => ({
   container: {
     saveRepoUseCase: { execute: jest.fn() },
     unsaveRepoUseCase: { execute: jest.fn() },
