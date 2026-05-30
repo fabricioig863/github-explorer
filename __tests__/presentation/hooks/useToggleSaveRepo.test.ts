@@ -7,12 +7,7 @@ import { makeRepository } from '../../test-utils/fixtures/repository.fixture';
 import { createTestQueryClient } from '../../test-utils/renderWithProviders';
 
 jest.mock('src/infra/di/bootstrap', () => ({
-  container: {
-    saveRepoUseCase: { execute: jest.fn() },
-    unsaveRepoUseCase: { execute: jest.fn() },
-    listSavedReposUseCase: { execute: jest.fn() },
-    isRepoSavedUseCase: { execute: jest.fn() },
-  },
+  container: require('../../test-utils/fakes/makeFakeContainer').makeFakeContainer(),
 }));
 
 const saveMock = container.saveRepoUseCase.execute as jest.Mock;

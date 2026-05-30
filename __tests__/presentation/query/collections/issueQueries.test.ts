@@ -13,10 +13,7 @@ import { container } from 'src/infra/di/bootstrap';
 import { makeIssue } from '../../../test-utils/fixtures/issue.fixture';
 
 jest.mock('src/infra/di/bootstrap', () => ({
-  container: {
-    listIssuesUseCase: { execute: jest.fn() },
-    countOpenIssuesUseCase: { execute: jest.fn() },
-  },
+  container: require('../../../test-utils/fakes/makeFakeContainer').makeFakeContainer(),
 }));
 
 const listMock = container.listIssuesUseCase.execute as jest.Mock;

@@ -8,12 +8,7 @@ import { makeRepository } from '../../test-utils/fixtures/repository.fixture';
 import { renderWithProviders } from '../../test-utils/renderWithProviders';
 
 jest.mock('src/infra/di/bootstrap', () => ({
-  container: {
-    searchReposUseCase: { execute: jest.fn() },
-    getRepoDetailsUseCase: { execute: jest.fn() },
-    listIssuesUseCase: { execute: jest.fn() },
-    countOpenIssuesUseCase: { execute: jest.fn() },
-  },
+  container: require('../../test-utils/fakes/makeFakeContainer').makeFakeContainer(),
 }));
 
 const executeMock = container.searchReposUseCase.execute as jest.Mock;

@@ -8,10 +8,7 @@ import { container } from 'src/infra/di/bootstrap';
 import { makeSavedRepo } from '../../../test-utils/fixtures/savedRepo.fixture';
 
 jest.mock('src/infra/di/bootstrap', () => ({
-  container: {
-    listSavedReposUseCase: { execute: jest.fn() },
-    isRepoSavedUseCase: { execute: jest.fn() },
-  },
+  container: require('../../../test-utils/fakes/makeFakeContainer').makeFakeContainer(),
 }));
 
 const listMock = container.listSavedReposUseCase.execute as jest.Mock;
